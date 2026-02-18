@@ -655,35 +655,73 @@
       transform: none;
     }
 
-    /* ── OFF-SCREEN RENDER ── */
+    /* ── OFF-SCREEN RENDER ──
+       Exact mirror of @media print rules, applied as regular CSS
+       so html2canvas sees them. These must stay in sync with the
+       print block above. ── */
     #bulkRenderContainer {
       position: fixed;
       top: -99999px;
       left: -99999px;
-      width: 816px;
       background: white;
       z-index: -1;
       overflow: visible;
       pointer-events: none;
     }
+
+    /* Container simulates the printable area:
+       Letter = 8.5×11in, margins 0.47in each side
+       Printable width  = 8.5 - 0.94 = 7.56in = 725.76px ≈ 726px
+       Printable height = 11  - 0.94 = 10.06in = 965.76px ≈ 966px */
     .bulk-render-page {
+      width: 726px;
       max-height: none !important;
       overflow: visible !important;
       box-shadow: none !important;
       border-radius: 0 !important;
+      padding: 0;
+      margin: 0;
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 9pt;
+      line-height: 1.35;
+      color: #000;
+      background: white;
     }
+
+    /* ── General print-equivalent rules (matches @media print .page) ── */
     .bulk-render-page .branded-header {
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+      margin: 0 0 14px 0;
+      padding: 12px 16px;
+      border-radius: 0;
     }
-    .bulk-render-page .warning {
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-    .bulk-render-page .policy-intro {
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
+    .bulk-render-page .branded-header img { height: 40px; }
+    .bulk-render-page .branded-header .header-name { font-size: 14pt; }
+    .bulk-render-page h1 { font-size: 10pt; margin: 0 0 10px; text-align: center; font-weight: bold; }
+    .bulk-render-page h2 { font-family: 'Segoe UI', sans-serif; font-size: 9.5pt; font-weight: 700; margin: 12px 0 6px; }
+    .bulk-render-page .warning { font-size: 8.5pt; padding: 8px 12px; margin: 0 0 12px; font-weight: bold; text-align: center; border-width: 2px; border-style: solid; border-radius: 5px; }
+    .bulk-render-page .policy-intro { margin: 0 0 14px; padding: 10px 16px; text-align: center; font-size: 10pt; border-width: 2px; border-style: solid; border-radius: 8px; }
+    .bulk-render-page p { margin: 0 0 8px; font-size: 9pt; line-height: 1.35; text-align: justify; }
+    .bulk-render-page ul, .bulk-render-page ol { margin: 6px 0 8px 20px; }
+    .bulk-render-page ul li, .bulk-render-page ol li { margin-bottom: 4px; font-size: 9pt; line-height: 1.35; }
+    .bulk-render-page .caps { font-weight: bold; }
+    .bulk-render-page .indent { margin-left: 0.25in; margin-bottom: 6px; }
+    .bulk-render-page .sig-area { margin-top: 8px; display: flex; justify-content: space-between; gap: 12px; }
+    .bulk-render-page .sig-line { border-bottom: 1px solid #000; flex: 1; padding-bottom: 2px; font-size: 8pt; }
+    .bulk-render-page .sig-label { font-size: 8pt; margin-top: 2px; color: #555; }
+
+    /* ── Waiver-specific: fit on ONE page (matches @media print .page.waiver) ── */
+    .bulk-render-page.waiver .branded-header { padding: 8px 12px; margin-bottom: 10px; }
+    .bulk-render-page.waiver .branded-header img { height: 34px; }
+    .bulk-render-page.waiver .branded-header .header-name { font-size: 12.5pt; }
+    .bulk-render-page.waiver h1 { font-size: 9.5pt; margin: 0 0 6px; }
+    .bulk-render-page.waiver .warning { font-size: 8pt; padding: 5px 10px; margin: 0 0 8px; }
+    .bulk-render-page.waiver p { font-size: 9pt; line-height: 1.28; margin: 0 0 3px; }
+    .bulk-render-page.waiver .indent { margin-bottom: 4px; }
+    .bulk-render-page.waiver .sig-area { margin-top: 4px; }
+    .bulk-render-page.waiver .sig-area + .sig-area { margin-top: 2px; }
+    .bulk-render-page.waiver .sig-area + div { margin-top: 2px; }
+    .bulk-render-page.waiver .sig-line { padding-bottom: 1px; }
+    .bulk-render-page.waiver .sig-label { margin-top: 1px; }
 
     /* Hide bulk button and modal from print */
     @media print {
@@ -1253,23 +1291,14 @@ function waitForImages(container) {
 async function generateGymPDF(gym, docType) {
   const container = document.getElementById('bulkRenderContainer');
 
-  // Resolve colors that html2canvas can't handle
-  const policyIntroBg = hexMix(gym.color2 || gym.color, '#ffffff', 0.15);
+  // Resolve colors that html2canvas can't handle (CSS vars + color-mix)
   const warningColor = WARNING_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color;
+  const policyIntroBg = hexMix(gym.color2 || gym.color, '#ffffff', 0.15);
 
-  // Build off-screen page element
+  // Build the page div — CSS class .bulk-render-page handles ALL sizing
+  // (mirrors @media print rules as regular screen CSS)
   const pageDiv = document.createElement('div');
-  pageDiv.style.cssText =
-    'background:white; padding:40px; font-family:Times New Roman,Georgia,serif;' +
-    'font-size:10.5pt; line-height:1.4; color:#000; max-height:none;' +
-    'overflow:visible; box-sizing:border-box; width:816px;';
 
-  // Set CSS custom properties
-  pageDiv.style.setProperty('--gym-color', gym.color);
-  pageDiv.style.setProperty('--gym-color2', gym.color2 || gym.color);
-  pageDiv.style.setProperty('--gym-warning-color', warningColor);
-
-  // Inject content using the EXISTING template functions (unchanged)
   if (docType === 'waiver') {
     pageDiv.className = 'page waiver bulk-render-page';
     pageDiv.innerHTML = getWaiverHTML(gym);
@@ -1278,88 +1307,30 @@ async function generateGymPDF(gym, docType) {
     pageDiv.innerHTML = getPolicyHTML(gym);
   }
 
-  // Manually inline colors html2canvas can't resolve from CSS vars / color-mix
-  const warningEl = pageDiv.querySelector('.warning');
+  // Only inline things html2canvas truly can't resolve:
+  // 1) CSS custom property values (var(--gym-color) etc.)
+  // 2) color-mix() results
+
+  // h1 color
+  pageDiv.querySelectorAll('h1').forEach(function(el) {
+    if (!el.style.color) el.style.color = gym.color;
+  });
+
+  // Warning box colors
+  var warningEl = pageDiv.querySelector('.warning');
   if (warningEl) {
     warningEl.style.color = warningColor;
     warningEl.style.borderColor = warningColor;
   }
 
+  // Policy intro box colors + color-mix background
   if (docType === 'policy') {
-    const policyIntroEl = pageDiv.querySelector('.policy-intro');
+    var policyIntroEl = pageDiv.querySelector('.policy-intro');
     if (policyIntroEl) {
       policyIntroEl.style.background = policyIntroBg;
       policyIntroEl.style.borderColor = gym.color2 || gym.color;
       policyIntroEl.style.color = gym.color2 || gym.color;
     }
-  }
-
-  // Inline h1 color (CSS var fallback)
-  const h1Els = pageDiv.querySelectorAll('h1');
-  h1Els.forEach(el => {
-    if (!el.style.color) el.style.color = gym.color;
-  });
-
-  // Inline h2 font
-  const h2Els = pageDiv.querySelectorAll('h2');
-  h2Els.forEach(el => {
-    el.style.fontFamily = "'Segoe UI', sans-serif";
-    el.style.fontWeight = '700';
-  });
-
-  // Inline branded-header styles
-  const brandedHeader = pageDiv.querySelector('.branded-header');
-  if (brandedHeader) {
-    brandedHeader.style.borderRadius = '12px 12px 0 0';
-  }
-
-  // Apply print-equivalent sizing so documents match the window.print() output
-  // @media print rules are NOT applied by html2canvas, so we inline them here
-  if (docType === 'waiver') {
-    // Waiver must fit on ONE page — replicate the tight print CSS
-    pageDiv.style.padding = '36px 36px';
-    pageDiv.style.fontSize = '9pt';
-    pageDiv.style.lineHeight = '1.28';
-    if (brandedHeader) {
-      brandedHeader.style.padding = '8px 12px';
-      brandedHeader.style.marginBottom = '10px';
-      brandedHeader.style.margin = '-36px -36px 10px -36px';
-      const headerImg = brandedHeader.querySelector('img');
-      if (headerImg) { headerImg.style.height = '34px'; }
-      const headerName = brandedHeader.querySelector('.header-name');
-      if (headerName) { headerName.style.fontSize = '12.5pt'; }
-    }
-    h1Els.forEach(el => { el.style.fontSize = '9.5pt'; el.style.margin = '0 0 6px'; });
-    if (warningEl) { warningEl.style.fontSize = '8pt'; warningEl.style.padding = '5px 10px'; warningEl.style.margin = '0 0 8px'; }
-    pageDiv.querySelectorAll('p').forEach(el => { el.style.fontSize = '9pt'; el.style.lineHeight = '1.28'; el.style.margin = '0 0 3px'; });
-    pageDiv.querySelectorAll('.indent').forEach(el => { el.style.marginBottom = '4px'; });
-    pageDiv.querySelectorAll('.sig-area').forEach((el, idx) => {
-      el.style.marginTop = idx === 0 ? '4px' : '2px';
-    });
-    pageDiv.querySelectorAll('.sig-line').forEach(el => { el.style.paddingBottom = '1px'; });
-    pageDiv.querySelectorAll('.sig-label').forEach(el => { el.style.marginTop = '1px'; });
-  } else {
-    // Policy — apply print font sizing but allow multiple pages
-    pageDiv.style.padding = '36px 36px';
-    pageDiv.style.fontSize = '9pt';
-    pageDiv.style.lineHeight = '1.35';
-    if (brandedHeader) {
-      brandedHeader.style.padding = '12px 16px';
-      brandedHeader.style.marginBottom = '14px';
-      brandedHeader.style.margin = '-36px -36px 14px -36px';
-      const headerImg = brandedHeader.querySelector('img');
-      if (headerImg) { headerImg.style.height = '40px'; }
-      const headerName = brandedHeader.querySelector('.header-name');
-      if (headerName) { headerName.style.fontSize = '14pt'; }
-    }
-    h1Els.forEach(el => { el.style.fontSize = '10pt'; el.style.margin = '0 0 10px'; });
-    h2Els.forEach(el => { el.style.fontSize = '9.5pt'; el.style.margin = '12px 0 6px'; });
-    pageDiv.querySelectorAll('p').forEach(el => { el.style.fontSize = '9pt'; el.style.lineHeight = '1.35'; el.style.margin = '0 0 8px'; });
-    pageDiv.querySelectorAll('ul, ol').forEach(el => { el.style.margin = '6px 0 8px 20px'; });
-    pageDiv.querySelectorAll('li').forEach(el => { el.style.marginBottom = '4px'; el.style.fontSize = '9pt'; el.style.lineHeight = '1.35'; });
-    if (warningEl) { warningEl.style.fontSize = '8.5pt'; warningEl.style.padding = '8px 12px'; warningEl.style.margin = '0 0 12px'; }
-    const policyIntroEl2 = pageDiv.querySelector('.policy-intro');
-    if (policyIntroEl2) { policyIntroEl2.style.margin = '0 0 14px'; policyIntroEl2.style.padding = '10px 16px'; }
   }
 
   // Place in off-screen container
@@ -1372,15 +1343,15 @@ async function generateGymPDF(gym, docType) {
   // Small delay to let browser paint
   await new Promise(r => setTimeout(r, 100));
 
-  // Capture with html2canvas
+  // Capture with html2canvas at the printable area width (726px)
   const canvas = await html2canvas(pageDiv, {
     scale: 2,
     useCORS: true,
     allowTaint: true,
     backgroundColor: '#ffffff',
     logging: false,
-    windowWidth: 816,
-    width: 816
+    windowWidth: 726,
+    width: 726
   });
 
   // Convert canvas to multi-page PDF
@@ -1400,13 +1371,19 @@ function buildPDFFromCanvas(canvas) {
   const PDF_WIDTH_PT = 612;   // 8.5in * 72
   const PDF_HEIGHT_PT = 792;  // 11in * 72
 
+  // Margins in points (0.47in * 72 = 33.84pt)
+  const MARGIN_PT = 33.84;
+
+  // Printable area in points
+  const CONTENT_WIDTH_PT = PDF_WIDTH_PT - (MARGIN_PT * 2);   // 544.32pt
+  const CONTENT_HEIGHT_PT = PDF_HEIGHT_PT - (MARGIN_PT * 2); // 724.32pt
+
   // Canvas dimensions (html2canvas at scale 2)
   const canvasWidth = canvas.width;
   const canvasHeight = canvas.height;
 
-  // Each PDF page in canvas pixels at scale 2:
-  // Letter height = 11in at 96dpi = 1056px, at scale 2 = 2112px
-  const pageHeightPx = 1056 * 2;
+  // Printable height in canvas pixels: 966px at scale 2 = 1932px
+  const pageHeightPx = 966 * 2;
 
   const totalPages = Math.ceil(canvasHeight / pageHeightPx);
 
@@ -1439,9 +1416,9 @@ function buildPDFFromCanvas(canvas) {
       0, 0, canvasWidth, srcHeight
     );
 
-    // Add to PDF
+    // Add to PDF — place content within the 0.47in margins
     const imgData = pageCanvas.toDataURL('image/jpeg', 0.92);
-    pdf.addImage(imgData, 'JPEG', 0, 0, PDF_WIDTH_PT, PDF_HEIGHT_PT);
+    pdf.addImage(imgData, 'JPEG', MARGIN_PT, MARGIN_PT, CONTENT_WIDTH_PT, CONTENT_HEIGHT_PT);
   }
 
   return pdf;
