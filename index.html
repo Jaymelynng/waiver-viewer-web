@@ -1307,10 +1307,59 @@ async function generateGymPDF(gym, docType) {
     el.style.fontWeight = '700';
   });
 
-  // Inline branded-header bg color (already done in getWaiverHTML/getPolicyHTML via style attr)
+  // Inline branded-header styles
   const brandedHeader = pageDiv.querySelector('.branded-header');
   if (brandedHeader) {
     brandedHeader.style.borderRadius = '12px 12px 0 0';
+  }
+
+  // Apply print-equivalent sizing so documents match the window.print() output
+  // @media print rules are NOT applied by html2canvas, so we inline them here
+  if (docType === 'waiver') {
+    // Waiver must fit on ONE page — replicate the tight print CSS
+    pageDiv.style.padding = '36px 36px';
+    pageDiv.style.fontSize = '9pt';
+    pageDiv.style.lineHeight = '1.28';
+    if (brandedHeader) {
+      brandedHeader.style.padding = '8px 12px';
+      brandedHeader.style.marginBottom = '10px';
+      brandedHeader.style.margin = '-36px -36px 10px -36px';
+      const headerImg = brandedHeader.querySelector('img');
+      if (headerImg) { headerImg.style.height = '34px'; }
+      const headerName = brandedHeader.querySelector('.header-name');
+      if (headerName) { headerName.style.fontSize = '12.5pt'; }
+    }
+    h1Els.forEach(el => { el.style.fontSize = '9.5pt'; el.style.margin = '0 0 6px'; });
+    if (warningEl) { warningEl.style.fontSize = '8pt'; warningEl.style.padding = '5px 10px'; warningEl.style.margin = '0 0 8px'; }
+    pageDiv.querySelectorAll('p').forEach(el => { el.style.fontSize = '9pt'; el.style.lineHeight = '1.28'; el.style.margin = '0 0 3px'; });
+    pageDiv.querySelectorAll('.indent').forEach(el => { el.style.marginBottom = '4px'; });
+    pageDiv.querySelectorAll('.sig-area').forEach((el, idx) => {
+      el.style.marginTop = idx === 0 ? '4px' : '2px';
+    });
+    pageDiv.querySelectorAll('.sig-line').forEach(el => { el.style.paddingBottom = '1px'; });
+    pageDiv.querySelectorAll('.sig-label').forEach(el => { el.style.marginTop = '1px'; });
+  } else {
+    // Policy — apply print font sizing but allow multiple pages
+    pageDiv.style.padding = '36px 36px';
+    pageDiv.style.fontSize = '9pt';
+    pageDiv.style.lineHeight = '1.35';
+    if (brandedHeader) {
+      brandedHeader.style.padding = '12px 16px';
+      brandedHeader.style.marginBottom = '14px';
+      brandedHeader.style.margin = '-36px -36px 14px -36px';
+      const headerImg = brandedHeader.querySelector('img');
+      if (headerImg) { headerImg.style.height = '40px'; }
+      const headerName = brandedHeader.querySelector('.header-name');
+      if (headerName) { headerName.style.fontSize = '14pt'; }
+    }
+    h1Els.forEach(el => { el.style.fontSize = '10pt'; el.style.margin = '0 0 10px'; });
+    h2Els.forEach(el => { el.style.fontSize = '9.5pt'; el.style.margin = '12px 0 6px'; });
+    pageDiv.querySelectorAll('p').forEach(el => { el.style.fontSize = '9pt'; el.style.lineHeight = '1.35'; el.style.margin = '0 0 8px'; });
+    pageDiv.querySelectorAll('ul, ol').forEach(el => { el.style.margin = '6px 0 8px 20px'; });
+    pageDiv.querySelectorAll('li').forEach(el => { el.style.marginBottom = '4px'; el.style.fontSize = '9pt'; el.style.lineHeight = '1.35'; });
+    if (warningEl) { warningEl.style.fontSize = '8.5pt'; warningEl.style.padding = '8px 12px'; warningEl.style.margin = '0 0 12px'; }
+    const policyIntroEl2 = pageDiv.querySelector('.policy-intro');
+    if (policyIntroEl2) { policyIntroEl2.style.margin = '0 0 14px'; policyIntroEl2.style.padding = '10px 16px'; }
   }
 
   // Place in off-screen container
