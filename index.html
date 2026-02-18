@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Policy &amp; Waiver Viewer</title>
+  <title>Waiver Hub</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -87,8 +87,8 @@
     }
 
     .gym-card {
-      background: #ffffff;
-      border: 2px solid #adb2c6;
+      background: linear-gradient(145deg, #fafbfc 0%, #f0f2f5 100%);
+      border: 2px solid #c4cad4;
       border-radius: 14px;
       padding: 18px 20px;
       cursor: pointer;
@@ -98,41 +98,44 @@
       gap: 16px;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 4px 0 #d1d5db, 0 6px 12px rgba(0,0,0,0.15);
+      box-shadow: 0 6px 0 #c4cad4, 0 8px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.8);
     }
     .gym-card::before {
       content: '';
       position: absolute;
       left: 0; top: 0; bottom: 0;
-      width: 4px;
+      width: 6px;
       background: var(--gym-color);
       border-radius: 14px 0 0 14px;
       transition: width 0.25s;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.15);
     }
     .gym-card:hover {
       border-color: var(--gym-color);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 0 #d1d5db, 0 10px 20px rgba(0,0,0,0.2);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 0 #c4cad4, 0 12px 28px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.9);
     }
-    .gym-card:hover::before { width: 6px; }
+    .gym-card:hover::before { width: 8px; }
 
     .gym-card .logo-wrap {
-      width: 54px; height: 54px;
+      width: 56px; height: 56px;
       border-radius: 12px;
-      background: white;
+      background: #e2e4e9;
+      background: color-mix(in srgb, var(--gym-color) 22%, #e2e4e9);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.5);
+      border: 1px solid rgba(0,0,0,0.06);
     }
     .gym-card .logo-wrap img {
-      max-width: 46px; max-height: 46px;
+      max-width: 48px; max-height: 48px;
       object-fit: contain;
     }
-    .gym-card .gym-info h3 { font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 3px; }
-    .gym-card .gym-info span { font-size: 12px; color: #737373; }
+    .gym-card .gym-info h3 { font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 4px; letter-spacing: -0.2px; }
+    .gym-card .gym-info span { font-size: 12px; color: #4b5563; font-weight: 500; }
     .gym-card .arrow {
       margin-left: auto;
       color: #adb2c6;
@@ -396,15 +399,309 @@
     }
     .toast.show { transform: translateY(0); opacity: 1; }
 
+    /* ── BULK DOWNLOAD BUTTON ── */
+    .bulk-dl-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      background: #b48f8f;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #8b6f6f, 0 6px 12px rgba(0,0,0,0.25);
+      transition: all 0.2s;
+      white-space: nowrap;
+      min-width: 120px;
+      justify-content: center;
+    }
+    .bulk-dl-btn:hover { transform: translateY(2px); box-shadow: 0 2px 0 #8b6f6f, 0 4px 8px rgba(0,0,0,0.25); }
+    .bulk-dl-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #8b6f6f; }
+    .bulk-dl-btn.hidden { visibility: hidden; pointer-events: none; }
+
+    /* ── BULK DOWNLOAD MODAL ── */
+    .bulk-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .bulk-modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .bulk-modal {
+      background: linear-gradient(160deg, #f5f0f0 0%, #ede8e8 100%);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 540px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 4px 0 #c4a8a8;
+      border: 1px solid #d4c4c4;
+      transform: scale(0.95) translateY(8px);
+      transition: transform 0.25s;
+      overflow: hidden;
+    }
+    .bulk-modal-overlay.open .bulk-modal {
+      transform: scale(1) translateY(0);
+    }
+    .bulk-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #d4c4c4;
+    }
+    .bulk-modal-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0;
+    }
+    .bulk-modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #9ca3af;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+    .bulk-modal-close:hover { color: #1f2937; }
+    .bulk-modal-body {
+      padding: 20px 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .bulk-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #737373;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .bulk-select-controls {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .bulk-link-btn {
+      background: none;
+      border: none;
+      color: #b48f8f;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .bulk-link-btn:hover { color: #8b6f6f; }
+    .bulk-doc-toggle {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .bulk-toggle-opt {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: white;
+      border: 2px solid #d1d5db;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4b5563;
+      transition: all 0.15s;
+    }
+    .bulk-toggle-opt:has(input:checked) {
+      border-color: #b48f8f;
+      background: #f5eded;
+      color: #1f2937;
+    }
+    .bulk-toggle-opt input { display: none; }
+    .bulk-gym-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .bulk-gym-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .bulk-gym-row:hover { border-color: #b48f8f; background: #fdf9f9; }
+    .bulk-gym-row.checked { border-color: #b48f8f; background: #f5eded; }
+    .bulk-gym-row .gym-color-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .bulk-gym-row .gym-row-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1f2937;
+      flex: 1;
+    }
+    .bulk-gym-row .gym-row-abbr {
+      font-size: 11px;
+      color: #9ca3af;
+      font-weight: 500;
+    }
+    .bulk-gym-checkbox {
+      width: 17px; height: 17px;
+      accent-color: #b48f8f;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* ── BULK PROGRESS ── */
+    .bulk-progress-area {
+      padding: 0 24px 16px;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 4px;
+    }
+    .bulk-progress-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 8px;
+      margin-top: 12px;
+    }
+    .bulk-progress-bar-track {
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .bulk-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #b48f8f, #c9a8a8);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    /* ── BULK MODAL FOOTER ── */
+    .bulk-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 24px;
+      border-top: 1px solid #d4c4c4;
+    }
+    .bulk-cancel-btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: 2px solid #adb2c6;
+      background: #e5e7eb;
+      color: #4b5563;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .bulk-cancel-btn:hover { background: white; color: #1f2937; }
+    .bulk-download-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 10px;
+      border: none;
+      background: #b48f8f;
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #8b6f6f;
+      transition: all 0.2s;
+    }
+    .bulk-download-btn:hover { transform: translateY(2px); box-shadow: 0 2px 0 #8b6f6f; }
+    .bulk-download-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #8b6f6f; }
+    .bulk-download-btn:disabled {
+      background: #d1d5db;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── OFF-SCREEN RENDER ── */
+    #bulkRenderContainer {
+      position: fixed;
+      top: -99999px;
+      left: -99999px;
+      width: 816px;
+      background: white;
+      z-index: -1;
+      overflow: visible;
+      pointer-events: none;
+    }
+    .bulk-render-page {
+      max-height: none !important;
+      overflow: visible !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+    }
+    .bulk-render-page .branded-header {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .bulk-render-page .warning {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .bulk-render-page .policy-intro {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Hide bulk button and modal from print */
+    @media print {
+      .bulk-dl-btn, .bulk-modal-overlay, #bulkRenderContainer { display: none !important; }
+    }
+
   </style>
 </head>
 <body>
 
 <!-- ====== APP HEADER ====== -->
 <div class="app-header">
-  <div style="width:120px;"></div>
+  <button class="bulk-dl-btn" id="bulkDlBtn" onclick="openBulkModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Bulk Download
+  </button>
   <div class="header-content">
-    <h1>Policy &amp; Waiver Viewer</h1>
+    <h1>Waiver Hub</h1>
     <div class="subtitle">Browse all gym waivers and policies in one place — view and download as PDF</div>
   </div>
   <button class="back-btn" id="backBtn" onclick="showGrid()">
@@ -423,6 +720,49 @@
   <div class="doc-tabs" id="docTabs"></div>
   <div class="page" id="docPage"></div>
 </div>
+
+<!-- ====== BULK DOWNLOAD MODAL ====== -->
+<div class="bulk-modal-overlay" id="bulkModalOverlay" onclick="closeBulkModalIfOverlay(event)">
+  <div class="bulk-modal" id="bulkModal">
+    <div class="bulk-modal-header">
+      <h2>Bulk Download</h2>
+      <button class="bulk-modal-close" onclick="closeBulkModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="bulk-modal-body">
+      <div class="bulk-section-label">Document Type</div>
+      <div class="bulk-doc-toggle">
+        <label class="bulk-toggle-opt"><input type="radio" name="bulkDocType" value="waiver" checked> Waiver Only</label>
+        <label class="bulk-toggle-opt"><input type="radio" name="bulkDocType" value="policy"> Policy Only</label>
+        <label class="bulk-toggle-opt"><input type="radio" name="bulkDocType" value="both"> Both</label>
+      </div>
+      <div class="bulk-section-label" style="margin-top:16px;">
+        Select Gyms
+        <span class="bulk-select-controls">
+          <button class="bulk-link-btn" onclick="bulkSelectAll(true)">Select All</button>
+          &bull;
+          <button class="bulk-link-btn" onclick="bulkSelectAll(false)">Deselect All</button>
+        </span>
+      </div>
+      <div class="bulk-gym-list" id="bulkGymList"></div>
+    </div>
+    <div class="bulk-progress-area" id="bulkProgressArea" style="display:none;">
+      <div class="bulk-progress-label" id="bulkProgressLabel">Preparing...</div>
+      <div class="bulk-progress-bar-track">
+        <div class="bulk-progress-bar-fill" id="bulkProgressBarFill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="bulk-modal-footer">
+      <button class="bulk-cancel-btn" onclick="closeBulkModal()">Cancel</button>
+      <button class="bulk-download-btn" id="bulkDownloadBtn" onclick="startBulkDownload()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download ZIP
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Off-screen render container -->
+<div id="bulkRenderContainer" aria-hidden="true"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -455,7 +795,7 @@ function buildGrid() {
       </div>
       <div class="gym-info">
         <h3>${g.name}</h3>
-        <span>${g.abbr} &bull; Policy &amp; Waiver</span>
+        <span>${g.abbr} &bull; Waiver Hub</span>
       </div>
       <div class="arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
     </div>
@@ -474,6 +814,7 @@ function selectGym(idx) {
   document.getElementById('viewer').style.setProperty('--gym-color2', gym.color2 || gym.color);
   document.getElementById('viewer').style.setProperty('--gym-warning-color', WARNING_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color);
   document.getElementById('backBtn').style.display = 'flex';
+  document.getElementById('bulkDlBtn').classList.add('hidden');
 
   // Toolbar
   document.getElementById('toolbar').innerHTML = `
@@ -516,7 +857,7 @@ function switchDoc(doc) {
 /* ═══════════════ PAGE TITLE (for PDF filename) ═══════════════ */
 function updatePageTitle() {
   if (currentGym === null) {
-    document.title = 'Policy & Waiver Viewer';
+    document.title = 'Waiver Hub';
   } else {
     const gym = GYMS[currentGym];
     const docName = currentDoc === 'waiver' ? 'Release & Waiver' : 'Policies & Procedures';
@@ -788,6 +1129,7 @@ function showGrid() {
   document.getElementById('gymGrid').classList.remove('hidden');
   document.getElementById('gridTitle').style.display = '';
   document.getElementById('backBtn').style.display = 'none';
+  document.getElementById('bulkDlBtn').classList.remove('hidden');
   currentGym = null;
   updatePageTitle();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -803,6 +1145,345 @@ function showToast(msg) {
 
 /* ═══════════════ INIT ═══════════════ */
 buildGrid();
+</script>
+
+<!-- CDN Libraries for Bulk Download -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   BULK DOWNLOAD ENGINE
+   Generates PDFs via html2canvas + jsPDF, bundles via JSZip
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Modal Controls ── */
+function openBulkModal() {
+  buildBulkGymList();
+  document.getElementById('bulkProgressArea').style.display = 'none';
+  document.getElementById('bulkDownloadBtn').disabled = false;
+  resetBulkDownloadBtn();
+  document.getElementById('bulkModalOverlay').classList.add('open');
+}
+
+function closeBulkModal() {
+  document.getElementById('bulkModalOverlay').classList.remove('open');
+}
+
+function closeBulkModalIfOverlay(e) {
+  if (e.target === document.getElementById('bulkModalOverlay')) closeBulkModal();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeBulkModal();
+});
+
+function resetBulkDownloadBtn() {
+  const btn = document.getElementById('bulkDownloadBtn');
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download ZIP
+  `;
+}
+
+function buildBulkGymList() {
+  const list = document.getElementById('bulkGymList');
+  list.innerHTML = GYMS.map((g, i) => `
+    <label class="bulk-gym-row checked" id="bulkGymRow_${i}">
+      <div class="gym-color-dot" style="background:${g.color}"></div>
+      <div class="gym-row-name">${g.name}</div>
+      <span class="gym-row-abbr">${g.abbr}</span>
+      <input type="checkbox" class="bulk-gym-checkbox" id="bulkCheck_${i}" checked onchange="updateBulkRowStyle(${i})">
+    </label>
+  `).join('');
+}
+
+function updateBulkRowStyle(i) {
+  const cb = document.getElementById('bulkCheck_' + i);
+  const row = document.getElementById('bulkGymRow_' + i);
+  row.classList.toggle('checked', cb.checked);
+}
+
+function bulkSelectAll(checked) {
+  GYMS.forEach((_, i) => {
+    document.getElementById('bulkCheck_' + i).checked = checked;
+    document.getElementById('bulkGymRow_' + i).classList.toggle('checked', checked);
+  });
+}
+
+/* ── Progress Bar ── */
+function setProgress(pct, label) {
+  document.getElementById('bulkProgressBarFill').style.width = pct + '%';
+  document.getElementById('bulkProgressLabel').textContent = label;
+}
+
+/* ── Color Utilities ── */
+function hexMix(hexA, hexB, fractionA) {
+  function parseHex(hex) {
+    const h = hex.replace('#', '');
+    const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+    return [
+      parseInt(full.substring(0, 2), 16),
+      parseInt(full.substring(2, 4), 16),
+      parseInt(full.substring(4, 6), 16)
+    ];
+  }
+  const [r1, g1, b1] = parseHex(hexA);
+  const [r2, g2, b2] = parseHex(hexB);
+  const r = Math.round(r1 * fractionA + r2 * (1 - fractionA));
+  const g = Math.round(g1 * fractionA + g2 * (1 - fractionA));
+  const b = Math.round(b1 * fractionA + b2 * (1 - fractionA));
+  return 'rgb(' + r + ', ' + g + ', ' + b + ')';
+}
+
+/* ── Wait for images to load ── */
+function waitForImages(container) {
+  const images = Array.from(container.querySelectorAll('img'));
+  if (images.length === 0) return Promise.resolve();
+  const timeout = new Promise(resolve => setTimeout(resolve, 5000));
+  const allLoaded = Promise.all(images.map(img => {
+    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+    return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+  }));
+  return Promise.race([allLoaded, timeout]);
+}
+
+/* ── Generate a single PDF for one gym + doc type ── */
+async function generateGymPDF(gym, docType) {
+  const container = document.getElementById('bulkRenderContainer');
+
+  // Resolve colors that html2canvas can't handle
+  const policyIntroBg = hexMix(gym.color2 || gym.color, '#ffffff', 0.15);
+  const warningColor = WARNING_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color;
+
+  // Build off-screen page element
+  const pageDiv = document.createElement('div');
+  pageDiv.style.cssText =
+    'background:white; padding:40px; font-family:Times New Roman,Georgia,serif;' +
+    'font-size:10.5pt; line-height:1.4; color:#000; max-height:none;' +
+    'overflow:visible; box-sizing:border-box; width:816px;';
+
+  // Set CSS custom properties
+  pageDiv.style.setProperty('--gym-color', gym.color);
+  pageDiv.style.setProperty('--gym-color2', gym.color2 || gym.color);
+  pageDiv.style.setProperty('--gym-warning-color', warningColor);
+
+  // Inject content using the EXISTING template functions (unchanged)
+  if (docType === 'waiver') {
+    pageDiv.className = 'page waiver bulk-render-page';
+    pageDiv.innerHTML = getWaiverHTML(gym);
+  } else {
+    pageDiv.className = 'page policy bulk-render-page';
+    pageDiv.innerHTML = getPolicyHTML(gym);
+  }
+
+  // Manually inline colors html2canvas can't resolve from CSS vars / color-mix
+  const warningEl = pageDiv.querySelector('.warning');
+  if (warningEl) {
+    warningEl.style.color = warningColor;
+    warningEl.style.borderColor = warningColor;
+  }
+
+  if (docType === 'policy') {
+    const policyIntroEl = pageDiv.querySelector('.policy-intro');
+    if (policyIntroEl) {
+      policyIntroEl.style.background = policyIntroBg;
+      policyIntroEl.style.borderColor = gym.color2 || gym.color;
+      policyIntroEl.style.color = gym.color2 || gym.color;
+    }
+  }
+
+  // Inline h1 color (CSS var fallback)
+  const h1Els = pageDiv.querySelectorAll('h1');
+  h1Els.forEach(el => {
+    if (!el.style.color) el.style.color = gym.color;
+  });
+
+  // Inline h2 font
+  const h2Els = pageDiv.querySelectorAll('h2');
+  h2Els.forEach(el => {
+    el.style.fontFamily = "'Segoe UI', sans-serif";
+    el.style.fontWeight = '700';
+  });
+
+  // Inline branded-header bg color (already done in getWaiverHTML/getPolicyHTML via style attr)
+  const brandedHeader = pageDiv.querySelector('.branded-header');
+  if (brandedHeader) {
+    brandedHeader.style.borderRadius = '12px 12px 0 0';
+  }
+
+  // Place in off-screen container
+  container.innerHTML = '';
+  container.appendChild(pageDiv);
+
+  // Wait for logo images to load
+  await waitForImages(container);
+
+  // Small delay to let browser paint
+  await new Promise(r => setTimeout(r, 100));
+
+  // Capture with html2canvas
+  const canvas = await html2canvas(pageDiv, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+    windowWidth: 816,
+    width: 816
+  });
+
+  // Convert canvas to multi-page PDF
+  const pdf = buildPDFFromCanvas(canvas);
+
+  // Cleanup
+  container.innerHTML = '';
+
+  return pdf.output('arraybuffer');
+}
+
+/* ── Slice canvas into letter-page-sized PDF ── */
+function buildPDFFromCanvas(canvas) {
+  const { jsPDF } = window.jspdf;
+
+  // PDF page dimensions in points (letter)
+  const PDF_WIDTH_PT = 612;   // 8.5in * 72
+  const PDF_HEIGHT_PT = 792;  // 11in * 72
+
+  // Canvas dimensions (html2canvas at scale 2)
+  const canvasWidth = canvas.width;
+  const canvasHeight = canvas.height;
+
+  // Each PDF page in canvas pixels at scale 2:
+  // Letter height = 11in at 96dpi = 1056px, at scale 2 = 2112px
+  const pageHeightPx = 1056 * 2;
+
+  const totalPages = Math.ceil(canvasHeight / pageHeightPx);
+
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'pt',
+    format: 'letter'
+  });
+
+  for (let page = 0; page < totalPages; page++) {
+    if (page > 0) pdf.addPage('letter', 'portrait');
+
+    const srcY = page * pageHeightPx;
+    const srcHeight = Math.min(pageHeightPx, canvasHeight - srcY);
+
+    // Create a temp canvas for this page slice
+    const pageCanvas = document.createElement('canvas');
+    pageCanvas.width = canvasWidth;
+    pageCanvas.height = pageHeightPx;
+    const ctx = pageCanvas.getContext('2d');
+
+    // Fill white so last page doesn't have black at bottom
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+    // Copy the slice
+    ctx.drawImage(
+      canvas,
+      0, srcY, canvasWidth, srcHeight,
+      0, 0, canvasWidth, srcHeight
+    );
+
+    // Add to PDF
+    const imgData = pageCanvas.toDataURL('image/jpeg', 0.92);
+    pdf.addImage(imgData, 'JPEG', 0, 0, PDF_WIDTH_PT, PDF_HEIGHT_PT);
+  }
+
+  return pdf;
+}
+
+/* ── Main Bulk Download Orchestrator ── */
+async function startBulkDownload() {
+  // Guard: check libraries loaded
+  if (typeof window.jspdf === 'undefined' || typeof html2canvas === 'undefined' || typeof JSZip === 'undefined') {
+    showToast('PDF libraries not loaded. Check internet connection.');
+    return;
+  }
+
+  // Gather selections
+  const selectedGymIndices = GYMS
+    .map((_, i) => i)
+    .filter(i => document.getElementById('bulkCheck_' + i).checked);
+
+  if (selectedGymIndices.length === 0) {
+    showToast('Select at least one gym.');
+    return;
+  }
+
+  const docTypeRadio = document.querySelector('input[name="bulkDocType"]:checked');
+  const docType = docTypeRadio ? docTypeRadio.value : 'both';
+  const docTypes = docType === 'both' ? ['waiver', 'policy'] : [docType];
+
+  const totalJobs = selectedGymIndices.length * docTypes.length;
+  let completedJobs = 0;
+
+  // Disable UI, show progress
+  const btn = document.getElementById('bulkDownloadBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+  document.getElementById('bulkProgressArea').style.display = 'block';
+  setProgress(0, 'Initializing...');
+
+  const zip = new JSZip();
+
+  try {
+    for (const gymIdx of selectedGymIndices) {
+      const gym = GYMS[gymIdx];
+      for (const doc of docTypes) {
+        const label = doc === 'waiver' ? 'Release & Waiver' : 'Policies & Procedures';
+        setProgress(
+          Math.round((completedJobs / totalJobs) * 100),
+          'Generating: ' + gym.name + ' \u2014 ' + label + '...'
+        );
+
+        const pdfBytes = await generateGymPDF(gym, doc);
+        const fileName = gym.name + ' - ' + label + '.pdf';
+        zip.file(fileName, pdfBytes);
+
+        completedJobs++;
+        setProgress(
+          Math.round((completedJobs / totalJobs) * 100),
+          'Done: ' + gym.name + ' \u2014 ' + label
+        );
+      }
+    }
+
+    // Generate ZIP
+    setProgress(100, 'Compressing ZIP...');
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+    // Trigger download
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Gym_Documents.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+
+    setProgress(100, 'Download ready!');
+    setTimeout(function() {
+      closeBulkModal();
+      showToast('ZIP downloaded successfully!');
+      resetBulkDownloadBtn();
+      btn.disabled = false;
+    }, 800);
+
+  } catch (err) {
+    console.error('Bulk download failed:', err);
+    setProgress(0, 'Error \u2014 see console for details.');
+    btn.disabled = false;
+    resetBulkDownloadBtn();
+    showToast('An error occurred. Check console.');
+  }
+}
 </script>
 </body>
 </html>
