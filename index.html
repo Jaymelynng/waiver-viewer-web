@@ -1428,29 +1428,33 @@ async function buildWaiverPDF(gym, logoDataURL) {
   var h1Hex = gym.abbr === 'OAS' ? '#3e266b' : gym.color;
   var h1Col = parseHexColor(h1Hex);
 
-  /* ── Waiver uses tighter spacing to fit on 1 page ── */
-  var FS_BODY = 8.6, LH_BODY = 10.8;
-  var FS_H1 = 9.5, FS_WARNING = 7.8, FS_HEADER = 12.5;
+  /* ── Waiver spacing — tuned to fit on 1 page ── */
+  var FS_BODY = 9, LH_BODY = 11.2;
+  var FS_H1 = 9.5, FS_WARNING = 8, FS_HEADER = 13;
+  var PARA_GAP = 3;
   var y = MG_T;
 
   /* ── BRANDED HEADER BAR ── */
-  var hdrH = 38;
+  var hdrH = 42;
   pdf.setFillColor(col.r, col.g, col.b);
   pdf.rect(MG_L, y, CW, hdrH, 'F');
 
-  /* Logo */
+  /* Logo — centered vertically in header */
+  var logoSize = 34;
+  var logoY = y + (hdrH - logoSize) / 2;
   if (logoDataURL) {
-    try { pdf.addImage(logoDataURL, 'PNG', MG_L + 8, y + 4, 30, 30); } catch(e) {}
+    try { pdf.addImage(logoDataURL, 'PNG', MG_L + 10, logoY, logoSize, logoSize); } catch(e) {}
   }
 
-  /* Gym name */
+  /* Gym name — centered vertically in header */
   pdf.setFontSize(FS_HEADER);
   pdf.setFont('times', 'bold');
   pdf.setTextColor(255, 255, 255);
-  var nameX = logoDataURL ? MG_L + 44 : MG_L + 8;
-  pdf.text(gym.name, nameX, y + hdrH/2 + FS_HEADER/3);
+  var nameX = logoDataURL ? MG_L + 10 + logoSize + 10 : MG_L + 10;
+  var nameY = y + (hdrH / 2) + (FS_HEADER * 0.35);
+  pdf.text(gym.name, nameX, nameY);
 
-  y += hdrH + 8;
+  y += hdrH + 10;
 
   /* ── H1 TITLE ── */
   pdf.setTextColor(h1Col.r, h1Col.g, h1Col.b);
@@ -1460,26 +1464,27 @@ async function buildWaiverPDF(gym, logoDataURL) {
   var h1Line2 = 'INDEMNITY, MEDICAL CERTIFICATION, AND CONSENT TO MEDICAL TREATMENT AGREEMENT';
   var w1 = pdf.getTextWidth(h1Line1);
   pdf.text(h1Line1, MG_L + (CW - w1)/2, y);
-  y += FS_H1 + 2;
+  y += FS_H1 + 3;
   var w2 = pdf.getTextWidth(h1Line2);
   pdf.text(h1Line2, MG_L + (CW - w2)/2, y);
-  y += FS_H1 + 5;
+  y += FS_H1 + 6;
 
   /* ── WARNING BOX ── */
   var warnText = 'BY SIGNING THIS AGREEMENT, YOU WILL WAIVE CERTAIN LEGAL RIGHTS, INCLUDING THE RIGHT TO SUE. PLEASE READ CAREFULLY!';
   pdf.setFontSize(FS_WARNING);
   pdf.setFont('times', 'bold');
-  var warnLines = pdf.splitTextToSize(warnText, CW - 20);
-  var warnBoxH = warnLines.length * (FS_WARNING + 2) + 8;
+  var warnLines = pdf.splitTextToSize(warnText, CW - 24);
+  var warnLineH = FS_WARNING + 3;
+  var warnBoxH = warnLines.length * warnLineH + 10;
   pdf.setDrawColor(warnCol.r, warnCol.g, warnCol.b);
   pdf.setLineWidth(1.5);
   pdf.roundedRect(MG_L, y, CW, warnBoxH, 3, 3, 'S');
   pdf.setTextColor(warnCol.r, warnCol.g, warnCol.b);
   for (var wi = 0; wi < warnLines.length; wi++) {
     var wlw = pdf.getTextWidth(warnLines[wi]);
-    pdf.text(warnLines[wi], MG_L + (CW - wlw)/2, y + 4 + FS_WARNING + wi * (FS_WARNING + 2));
+    pdf.text(warnLines[wi], MG_L + (CW - wlw)/2, y + 5 + FS_WARNING + wi * warnLineH);
   }
-  y += warnBoxH + 5;
+  y += warnBoxH + 6;
 
   /* ── BODY PARAGRAPHS ── */
   pdf.setTextColor(0, 0, 0);
@@ -1500,17 +1505,17 @@ async function buildWaiverPDF(gym, logoDataURL) {
         drawLineSegments(pdf, indLines[il], indentX, y, FS_BODY);
         y += LH_BODY;
       }
-      y += 1.5;
+      y += PARA_GAP;
     } else if (para.type === 'sig') {
       /* Signature area */
-      y = checkPageBreak(pdf, y, 24, MG_T);
-      y += 2;
+      y = checkPageBreak(pdf, y, 26, MG_T);
+      y += 4;
       var sigGroups = para.lines;
       for (var si = 0; si < sigGroups.length; si++) {
         var row = sigGroups[si];
         var totalFlex = 0;
         for (var sf = 0; sf < row.length; sf++) totalFlex += row[sf].flex;
-        var sigGap = 10;
+        var sigGap = 12;
         var availW = CW - sigGap * (row.length - 1);
         var sx = MG_L;
         for (var sj = 0; sj < row.length; sj++) {
@@ -1518,16 +1523,16 @@ async function buildWaiverPDF(gym, logoDataURL) {
           /* Signature line */
           pdf.setDrawColor(0, 0, 0);
           pdf.setLineWidth(0.5);
-          pdf.line(sx, y + 8, sx + fieldW, y + 8);
+          pdf.line(sx, y + 10, sx + fieldW, y + 10);
           /* Label */
-          pdf.setFontSize(7);
+          pdf.setFontSize(7.5);
           pdf.setFont('times', 'normal');
           pdf.setTextColor(85, 85, 85);
-          pdf.text(row[sj].label, sx, y + 16);
+          pdf.text(row[sj].label, sx, y + 19);
           pdf.setTextColor(0, 0, 0);
           sx += fieldW + sigGap;
         }
-        y += 22;
+        y += 24;
       }
     } else {
       /* Normal paragraph */
@@ -1538,7 +1543,7 @@ async function buildWaiverPDF(gym, logoDataURL) {
         drawLineSegments(pdf, lines[li], MG_L, y, FS_BODY);
         y += LH_BODY;
       }
-      y += 1.5;
+      y += PARA_GAP;
     }
   }
 
@@ -1580,18 +1585,21 @@ async function buildPolicyPDF(gym, logoDataURL) {
   var y = MG_T;
 
   /* ── BRANDED HEADER BAR ── */
-  var hdrH = 44;
+  var hdrH = 48;
   pdf.setFillColor(col.r, col.g, col.b);
   pdf.rect(MG_L, y, CW, hdrH, 'F');
+  var pLogoSize = 38;
+  var pLogoY = y + (hdrH - pLogoSize) / 2;
   if (logoDataURL) {
-    try { pdf.addImage(logoDataURL, 'PNG', MG_L + 10, y + 5, 34, 34); } catch(e) {}
+    try { pdf.addImage(logoDataURL, 'PNG', MG_L + 12, pLogoY, pLogoSize, pLogoSize); } catch(e) {}
   }
   pdf.setFontSize(FS_HEADER);
   pdf.setFont('times', 'bold');
   pdf.setTextColor(255, 255, 255);
-  var nameX = logoDataURL ? MG_L + 52 : MG_L + 10;
-  pdf.text(gym.name, nameX, y + hdrH/2 + FS_HEADER/3);
-  y += hdrH + 12;
+  var nameX = logoDataURL ? MG_L + 12 + pLogoSize + 12 : MG_L + 12;
+  var nameY = y + (hdrH / 2) + (FS_HEADER * 0.35);
+  pdf.text(gym.name, nameX, nameY);
+  y += hdrH + 14;
 
   /* ── H1: POLICIES AND PROCEDURES ── */
   pdf.setTextColor(h1Col.r, h1Col.g, h1Col.b);
