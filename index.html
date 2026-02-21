@@ -1352,45 +1352,69 @@ function measureSegments(pdf, segs, fontSize) {
 }
 
 /* Word-wrap inline segments into lines that fit within maxWidth.
-   Returns array of lines, each line = array of {text, bold} segments */
+   Returns array of lines, each line = array of {text, bold} segments.
+   Strategy: flatten all segments into individual words, each word carries
+   a "needsSpace" flag. When drawing, a space is prepended if needed. */
 function wrapSegments(pdf, segs, fontSize, maxWidth) {
-  /* Flatten segments into words preserving bold state */
+  /* Build flat array of {word, bold, space} where space = prepend a space */
   var words = [];
+  var trailingSpace = false; /* did the previous segment end with whitespace? */
+
   for (var i = 0; i < segs.length; i++) {
-    var parts = segs[i].text.split(/(\s+)/);
-    for (var j = 0; j < parts.length; j++) {
-      if (parts[j].length > 0) words.push({ text: parts[j], bold: segs[i].bold });
+    var raw = segs[i].text;
+    if (!raw) continue;
+
+    /* Does this segment start with whitespace? */
+    var startsWithSpace = /^\s/.test(raw);
+    /* Extract all non-whitespace tokens */
+    var tokens = raw.match(/\S+/g);
+    if (!tokens) { trailingSpace = true; continue; } /* segment was all whitespace */
+
+    for (var j = 0; j < tokens.length; j++) {
+      var addSpace = false;
+      if (words.length > 0) {
+        if (j === 0) {
+          /* First word of a new segment: space if previous seg ended with space OR this seg starts with space */
+          addSpace = trailingSpace || startsWithSpace;
+        } else {
+          /* Subsequent word in same segment: always has a space before it */
+          addSpace = true;
+        }
+      }
+      words.push({ text: tokens[j], bold: segs[i].bold, space: addSpace });
     }
+    /* Does this segment end with whitespace? */
+    trailingSpace = /\s$/.test(raw);
   }
 
+  /* Now wrap words into lines */
   var lines = [];
   var curLine = [];
   var curWidth = 0;
 
+  /* Measure a single space width */
+  pdf.setFontSize(fontSize);
+  pdf.setFont('times', 'normal');
+  var spaceW = pdf.getTextWidth(' ');
+
   for (var k = 0; k < words.length; k++) {
-    var word = words[k];
+    var w = words[k];
     pdf.setFontSize(fontSize);
-    pdf.setFont('times', word.bold ? 'bold' : 'normal');
-    var ww = pdf.getTextWidth(word.text);
+    pdf.setFont('times', w.bold ? 'bold' : 'normal');
+    var ww = pdf.getTextWidth(w.text);
+    var extraSpace = (w.space && curLine.length > 0) ? spaceW : 0;
 
     if (curLine.length === 0) {
-      /* First word on line — skip leading whitespace */
-      if (word.text.trim().length > 0) {
-        curLine.push(word);
-        curWidth = ww;
-      }
-    } else if (curWidth + ww <= maxWidth + 0.5) {
-      curLine.push(word);
-      curWidth += ww;
+      curLine.push({ text: w.text, bold: w.bold });
+      curWidth = ww;
+    } else if (curWidth + extraSpace + ww <= maxWidth + 1) {
+      if (w.space) curLine.push({ text: ' ' + w.text, bold: w.bold });
+      else curLine.push({ text: w.text, bold: w.bold });
+      curWidth += extraSpace + ww;
     } else {
-      /* Word doesn't fit — start new line */
       lines.push(curLine);
-      curLine = [];
-      curWidth = 0;
-      if (word.text.trim().length > 0) {
-        curLine.push(word);
-        curWidth = ww;
-      }
+      curLine = [{ text: w.text, bold: w.bold }];
+      curWidth = ww;
     }
   }
   if (curLine.length > 0) lines.push(curLine);
