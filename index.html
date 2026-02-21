@@ -460,9 +460,10 @@
     .bulk-modal-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       padding: 20px 24px 16px;
       border-bottom: 1px solid #d4c4c4;
+      position: relative;
     }
     .bulk-modal-header h2 {
       font-size: 18px;
@@ -471,6 +472,8 @@
       margin: 0;
     }
     .bulk-modal-close {
+      position: absolute;
+      right: 24px;
       background: none;
       border: none;
       font-size: 24px;
@@ -495,6 +498,7 @@
       margin-bottom: 10px;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 10px;
     }
     .bulk-select-controls {
@@ -522,6 +526,7 @@
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+      justify-content: center;
     }
     .bulk-toggle-opt {
       display: flex;
