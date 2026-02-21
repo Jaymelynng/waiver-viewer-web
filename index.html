@@ -498,27 +498,26 @@
       gap: 10px;
     }
     .bulk-select-controls {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: none;
-      letter-spacing: 0;
-      color: #9ca3af;
       display: flex;
       align-items: center;
       gap: 6px;
+      margin-left: auto;
     }
     .bulk-link-btn {
-      background: none;
-      border: none;
-      color: #b48f8f;
+      background: #e5e7eb;
+      border: 1px solid #c4cad4;
+      color: #4b5563;
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
-      padding: 0;
-      text-decoration: underline;
-      text-underline-offset: 2px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: all 0.15s;
+      text-transform: none;
+      letter-spacing: 0;
     }
-    .bulk-link-btn:hover { color: #8b6f6f; }
+    .bulk-link-btn:hover { background: #b48f8f; color: white; border-color: #b48f8f; }
     .bulk-doc-toggle {
       display: flex;
       gap: 8px;
@@ -780,7 +779,6 @@
         Select Gyms
         <span class="bulk-select-controls">
           <button class="bulk-link-btn" onclick="bulkSelectAll(true)">Select All</button>
-          &bull;
           <button class="bulk-link-btn" onclick="bulkSelectAll(false)">Deselect All</button>
         </span>
       </div>
