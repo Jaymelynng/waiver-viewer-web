@@ -1355,7 +1355,7 @@ async function generateGymPDF(gym, docType) {
 
   // Capture with html2canvas at the printable area width (726px)
   const canvas = await html2canvas(pageDiv, {
-    scale: 3,
+    scale: 4,
     useCORS: true,
     allowTaint: true,
     backgroundColor: '#ffffff',
@@ -1388,12 +1388,12 @@ function buildPDFFromCanvas(canvas) {
   const CONTENT_WIDTH_PT = PDF_WIDTH_PT - (MARGIN_PT * 2);   // 544.32pt
   const CONTENT_HEIGHT_PT = PDF_HEIGHT_PT - (MARGIN_PT * 2); // 724.32pt
 
-  // Canvas dimensions (html2canvas at scale 3)
+  // Canvas dimensions (html2canvas at scale 4)
   const canvasWidth = canvas.width;
   const canvasHeight = canvas.height;
 
-  // Printable height in canvas pixels: 966px at scale 3 = 2898px
-  const pageHeightPx = 966 * 3;
+  // Printable height in canvas pixels: 966px at scale 4 = 3864px
+  const pageHeightPx = 966 * 4;
 
   const totalPages = Math.ceil(canvasHeight / pageHeightPx);
 
