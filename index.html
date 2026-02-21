@@ -710,21 +710,20 @@
     .bulk-render-page .sig-label { font-size: 8pt; margin-top: 2px; color: #555; }
 
     /* ── Waiver-specific: fit on ONE page ──
-       Slightly tighter than @media print to compensate for
-       html2canvas rendering text a fraction larger than the
-       browser print engine. ── */
-    .bulk-render-page.waiver .branded-header { padding: 6px 12px; margin-bottom: 8px; }
-    .bulk-render-page.waiver .branded-header img { height: 32px; }
-    .bulk-render-page.waiver .branded-header .header-name { font-size: 12pt; }
-    .bulk-render-page.waiver h1 { font-size: 9pt; margin: 0 0 4px; }
-    .bulk-render-page.waiver .warning { font-size: 7.5pt; padding: 4px 10px; margin: 0 0 6px; }
-    .bulk-render-page.waiver p { font-size: 8.5pt; line-height: 1.24; margin: 0 0 2px; }
+       Tuned between @media print values and tighter overrides
+       to fill the page without spilling. ── */
+    .bulk-render-page.waiver .branded-header { padding: 7px 12px; margin-bottom: 9px; }
+    .bulk-render-page.waiver .branded-header img { height: 33px; }
+    .bulk-render-page.waiver .branded-header .header-name { font-size: 12.5pt; }
+    .bulk-render-page.waiver h1 { font-size: 9.5pt; margin: 0 0 5px; }
+    .bulk-render-page.waiver .warning { font-size: 8pt; padding: 5px 10px; margin: 0 0 7px; }
+    .bulk-render-page.waiver p { font-size: 8.8pt; line-height: 1.26; margin: 0 0 2.5px; }
     .bulk-render-page.waiver .indent { margin-bottom: 3px; }
-    .bulk-render-page.waiver .sig-area { margin-top: 3px; }
-    .bulk-render-page.waiver .sig-area + .sig-area { margin-top: 1px; }
-    .bulk-render-page.waiver .sig-area + div { margin-top: 1px; }
-    .bulk-render-page.waiver .sig-line { padding-bottom: 0px; }
-    .bulk-render-page.waiver .sig-label { margin-top: 0px; }
+    .bulk-render-page.waiver .sig-area { margin-top: 4px; }
+    .bulk-render-page.waiver .sig-area + .sig-area { margin-top: 2px; }
+    .bulk-render-page.waiver .sig-area + div { margin-top: 2px; }
+    .bulk-render-page.waiver .sig-line { padding-bottom: 1px; }
+    .bulk-render-page.waiver .sig-label { margin-top: 1px; }
 
     /* Hide bulk button and modal from print */
     @media print {
@@ -743,7 +742,7 @@
   </button>
   <div class="header-content">
     <h1>Waiver Hub</h1>
-    <div class="subtitle">Browse all gym waivers and policies in one place — view and download as PDF</div>
+    <div class="subtitle">View, download, or bulk export gym waivers and policies as PDF</div>
   </div>
   <button class="back-btn" id="backBtn" onclick="showGrid()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
