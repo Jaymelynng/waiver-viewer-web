@@ -420,7 +420,7 @@
     }
     .bulk-dl-btn:hover { transform: translateY(2px); box-shadow: 0 2px 0 #8b6f6f, 0 4px 8px rgba(0,0,0,0.25); }
     .bulk-dl-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #8b6f6f; }
-    .bulk-dl-btn.hidden { visibility: hidden; pointer-events: none; }
+    .bulk-dl-btn.hidden { display: none; }
 
     /* ── BULK DOWNLOAD MODAL ── */
     .bulk-modal-overlay {
@@ -736,13 +736,14 @@
 
 <!-- ====== APP HEADER ====== -->
 <div class="app-header">
-  <button class="bulk-dl-btn" id="bulkDlBtn" onclick="openBulkModal()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Bulk Download
-  </button>
+  <div style="width:120px;"></div>
   <div class="header-content">
     <h1>Waiver Hub</h1>
     <div class="subtitle">View, download, or bulk export gym waivers and policies as PDF</div>
+    <button class="bulk-dl-btn" id="bulkDlBtn" onclick="openBulkModal()" style="margin-top:12px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Bulk Download
+    </button>
   </div>
   <button class="back-btn" id="backBtn" onclick="showGrid()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
