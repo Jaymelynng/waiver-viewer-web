@@ -1392,29 +1392,24 @@ function wrapSegments(pdf, segs, fontSize, maxWidth) {
   var curLine = [];
   var curWidth = 0;
 
-  /* Measure a single space width */
-  pdf.setFontSize(fontSize);
-  pdf.setFont('times', 'normal');
-  var spaceW = pdf.getTextWidth(' ');
-
   for (var k = 0; k < words.length; k++) {
     var w = words[k];
     pdf.setFontSize(fontSize);
     pdf.setFont('times', w.bold ? 'bold' : 'normal');
-    var ww = pdf.getTextWidth(w.text);
-    var extraSpace = (w.space && curLine.length > 0) ? spaceW : 0;
+    var wordText = w.text;
+    var withSpace = w.space ? ' ' + w.text : w.text;
+    var fullW = pdf.getTextWidth(withSpace);
 
     if (curLine.length === 0) {
-      curLine.push({ text: w.text, bold: w.bold });
-      curWidth = ww;
-    } else if (curWidth + extraSpace + ww <= maxWidth + 1) {
-      if (w.space) curLine.push({ text: ' ' + w.text, bold: w.bold });
-      else curLine.push({ text: w.text, bold: w.bold });
-      curWidth += extraSpace + ww;
+      curLine.push({ text: wordText, bold: w.bold });
+      curWidth = pdf.getTextWidth(wordText);
+    } else if (curWidth + fullW <= maxWidth + 1) {
+      curLine.push({ text: withSpace, bold: w.bold });
+      curWidth += fullW;
     } else {
       lines.push(curLine);
-      curLine = [{ text: w.text, bold: w.bold }];
-      curWidth = ww;
+      curLine = [{ text: wordText, bold: w.bold }];
+      curWidth = pdf.getTextWidth(wordText);
     }
   }
   if (curLine.length > 0) lines.push(curLine);
@@ -1459,22 +1454,22 @@ async function buildWaiverPDF(gym, logoDataURL) {
   var y = MG_T;
 
   /* ── BRANDED HEADER BAR ── */
-  var hdrH = 42;
+  var hdrH = 50;
   pdf.setFillColor(col.r, col.g, col.b);
   pdf.rect(MG_L, y, CW, hdrH, 'F');
 
   /* Logo — centered vertically in header */
-  var logoSize = 34;
+  var logoSize = 40;
   var logoY = y + (hdrH - logoSize) / 2;
   if (logoDataURL) {
-    try { pdf.addImage(logoDataURL, 'PNG', MG_L + 10, logoY, logoSize, logoSize); } catch(e) {}
+    try { pdf.addImage(logoDataURL, 'PNG', MG_L + 12, logoY, logoSize, logoSize); } catch(e) {}
   }
 
   /* Gym name — centered vertically in header */
   pdf.setFontSize(FS_HEADER);
   pdf.setFont('times', 'bold');
   pdf.setTextColor(255, 255, 255);
-  var nameX = logoDataURL ? MG_L + 10 + logoSize + 10 : MG_L + 10;
+  var nameX = logoDataURL ? MG_L + 12 + logoSize + 12 : MG_L + 12;
   var nameY = y + (hdrH / 2) + (FS_HEADER * 0.35);
   pdf.text(gym.name, nameX, nameY);
 
