@@ -1196,13 +1196,13 @@ buildGrid();
 
 <!-- CDN Libraries for Bulk Download -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <script>
 /* ═══════════════════════════════════════════════════════
    BULK DOWNLOAD ENGINE
-   Generates PDFs via html2canvas + jsPDF, bundles via JSZip
+   Generates PDFs via jsPDF direct-draw (vector text + real images)
+   Bundles via JSZip
    ═══════════════════════════════════════════════════════ */
 
 /* ── Modal Controls ── */
@@ -1266,178 +1266,651 @@ function setProgress(pct, label) {
 }
 
 /* ── Color Utilities ── */
-function hexMix(hexA, hexB, fractionA) {
-  function parseHex(hex) {
-    const h = hex.replace('#', '');
-    const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
-    return [
-      parseInt(full.substring(0, 2), 16),
-      parseInt(full.substring(2, 4), 16),
-      parseInt(full.substring(4, 6), 16)
-    ];
-  }
-  const [r1, g1, b1] = parseHex(hexA);
-  const [r2, g2, b2] = parseHex(hexB);
-  const r = Math.round(r1 * fractionA + r2 * (1 - fractionA));
-  const g = Math.round(g1 * fractionA + g2 * (1 - fractionA));
-  const b = Math.round(b1 * fractionA + b2 * (1 - fractionA));
-  return 'rgb(' + r + ', ' + g + ', ' + b + ')';
+function parseHexColor(hex) {
+  var h = hex.replace('#', '');
+  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  return { r: parseInt(h.substring(0,2),16), g: parseInt(h.substring(2,4),16), b: parseInt(h.substring(4,6),16) };
 }
 
-/* ── Wait for images to load ── */
-function waitForImages(container) {
-  const images = Array.from(container.querySelectorAll('img'));
-  if (images.length === 0) return Promise.resolve();
-  const timeout = new Promise(resolve => setTimeout(resolve, 5000));
-  const allLoaded = Promise.all(images.map(img => {
-    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
-    return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
-  }));
-  return Promise.race([allLoaded, timeout]);
+function mixColors(hex1, hex2, frac) {
+  var c1 = parseHexColor(hex1), c2 = parseHexColor(hex2);
+  return {
+    r: Math.round(c1.r * frac + c2.r * (1-frac)),
+    g: Math.round(c1.g * frac + c2.g * (1-frac)),
+    b: Math.round(c1.b * frac + c2.b * (1-frac))
+  };
 }
 
-/* ── Generate a single PDF for one gym + doc type ── */
-async function generateGymPDF(gym, docType) {
-  const container = document.getElementById('bulkRenderContainer');
-
-  // Resolve colors that html2canvas can't handle (CSS vars + color-mix)
-  const warningColor = WARNING_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color;
-  const policyIntroBg = hexMix(gym.color2 || gym.color, '#ffffff', 0.15);
-
-  // Build the page div — CSS class .bulk-render-page handles ALL sizing
-  // (mirrors @media print rules as regular screen CSS)
-  const pageDiv = document.createElement('div');
-
-  if (docType === 'waiver') {
-    pageDiv.className = 'page waiver bulk-render-page';
-    pageDiv.innerHTML = getWaiverHTML(gym);
-  } else {
-    pageDiv.className = 'page policy bulk-render-page';
-    pageDiv.innerHTML = getPolicyHTML(gym);
-  }
-
-  // Only inline things html2canvas truly can't resolve:
-  // 1) CSS custom property values (var(--gym-color) etc.)
-  // 2) color-mix() results
-
-  // h1 color
-  pageDiv.querySelectorAll('h1').forEach(function(el) {
-    if (!el.style.color) el.style.color = gym.color;
+/* ── Load image as data URL ── */
+function loadImageAsDataURL(src) {
+  return new Promise(function(resolve) {
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      try { resolve(canvas.toDataURL('image/png')); } catch(e) { resolve(null); }
+    };
+    img.onerror = function() { resolve(null); };
+    img.src = src;
+    setTimeout(function() { resolve(null); }, 5000);
   });
+}
 
-  // Warning box colors
-  var warningEl = pageDiv.querySelector('.warning');
-  if (warningEl) {
-    warningEl.style.color = warningColor;
-    warningEl.style.borderColor = warningColor;
+/* ═══════════════════════════════════════════════════════
+   jsPDF DIRECT-DRAW PDF GENERATOR
+   Draws vector text + real images — no screenshots
+   ═══════════════════════════════════════════════════════ */
+
+/* Page constants (letter, points) */
+var PG_W = 612, PG_H = 792;
+var MG_L = 36, MG_R = 36, MG_T = 34, MG_B = 34;
+var CW = PG_W - MG_L - MG_R; /* content width = 540pt */
+
+/* ── Text rendering helpers ── */
+
+/* Split text into segments of [{text, bold, allcaps}] based on <strong>/<span class="caps"> */
+function parseInlineMarkup(html) {
+  var segs = [];
+  /* Replace <strong> and <span class="caps"> with markers */
+  var s = html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '$2')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
+    .replace(/\u201C/g, '\u201C').replace(/\u201D/g, '\u201D').replace(/\u2019/g, '\u2019').replace(/\u2014/g, '\u2014');
+
+  /* Tokenize by bold markers */
+  var parts = s.split(/(<strong>|<\/strong>|<span class="caps">|<\/span>)/gi);
+  var bold = false, allcaps = false;
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i];
+    if (!p) continue;
+    var pl = p.toLowerCase();
+    if (pl === '<strong>') { bold = true; continue; }
+    if (pl === '</strong>') { bold = false; continue; }
+    if (pl === '<span class="caps">') { allcaps = true; bold = true; continue; }
+    if (pl === '</span>') { allcaps = false; bold = false; continue; }
+    /* Strip any remaining HTML tags */
+    p = p.replace(/<[^>]*>/g, '');
+    if (p) segs.push({ text: p, bold: bold, allcaps: allcaps });
   }
+  return segs;
+}
 
-  // Policy intro box colors + color-mix background
-  if (docType === 'policy') {
-    var policyIntroColor = POLICY_INTRO_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color;
-    var policyIntroEl = pageDiv.querySelector('.policy-intro');
-    if (policyIntroEl) {
-      policyIntroEl.style.background = policyIntroBg;
-      policyIntroEl.style.borderColor = policyIntroColor;
-      policyIntroEl.style.color = policyIntroColor;
+/* Measure width of inline segments using jsPDF */
+function measureSegments(pdf, segs, fontSize) {
+  var w = 0;
+  for (var i = 0; i < segs.length; i++) {
+    pdf.setFontSize(fontSize);
+    pdf.setFont('times', segs[i].bold ? 'bold' : 'normal');
+    w += pdf.getTextWidth(segs[i].text);
+  }
+  return w;
+}
+
+/* Word-wrap inline segments into lines that fit within maxWidth.
+   Returns array of lines, each line = array of {text, bold} segments */
+function wrapSegments(pdf, segs, fontSize, maxWidth) {
+  /* Flatten segments into words preserving bold state */
+  var words = [];
+  for (var i = 0; i < segs.length; i++) {
+    var parts = segs[i].text.split(/(\s+)/);
+    for (var j = 0; j < parts.length; j++) {
+      if (parts[j].length > 0) words.push({ text: parts[j], bold: segs[i].bold });
     }
   }
 
-  // Place in off-screen container
-  container.innerHTML = '';
-  container.appendChild(pageDiv);
+  var lines = [];
+  var curLine = [];
+  var curWidth = 0;
 
-  // Wait for logo images to load
-  await waitForImages(container);
+  for (var k = 0; k < words.length; k++) {
+    var word = words[k];
+    pdf.setFontSize(fontSize);
+    pdf.setFont('times', word.bold ? 'bold' : 'normal');
+    var ww = pdf.getTextWidth(word.text);
 
-  // Small delay to let browser paint
-  await new Promise(r => setTimeout(r, 100));
-
-  // Capture with html2canvas at the printable area width (726px)
-  const canvas = await html2canvas(pageDiv, {
-    scale: 4,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: '#ffffff',
-    logging: false,
-    windowWidth: 726,
-    width: 726
-  });
-
-  // Convert canvas to multi-page PDF
-  const pdf = buildPDFFromCanvas(canvas);
-
-  // Cleanup
-  container.innerHTML = '';
-
-  return pdf.output('arraybuffer');
+    if (curLine.length === 0) {
+      /* First word on line — skip leading whitespace */
+      if (word.text.trim().length > 0) {
+        curLine.push(word);
+        curWidth = ww;
+      }
+    } else if (curWidth + ww <= maxWidth + 0.5) {
+      curLine.push(word);
+      curWidth += ww;
+    } else {
+      /* Word doesn't fit — start new line */
+      lines.push(curLine);
+      curLine = [];
+      curWidth = 0;
+      if (word.text.trim().length > 0) {
+        curLine.push(word);
+        curWidth = ww;
+      }
+    }
+  }
+  if (curLine.length > 0) lines.push(curLine);
+  return lines;
 }
 
-/* ── Slice canvas into letter-page-sized PDF ── */
-function buildPDFFromCanvas(canvas) {
-  const { jsPDF } = window.jspdf;
+/* Draw a single line of mixed bold/normal segments */
+function drawLineSegments(pdf, segs, x, y, fontSize) {
+  var cx = x;
+  for (var i = 0; i < segs.length; i++) {
+    pdf.setFontSize(fontSize);
+    pdf.setFont('times', segs[i].bold ? 'bold' : 'normal');
+    pdf.text(segs[i].text, cx, y);
+    cx += pdf.getTextWidth(segs[i].text);
+  }
+}
 
-  // PDF page dimensions in points (letter)
-  const PDF_WIDTH_PT = 612;   // 8.5in * 72
-  const PDF_HEIGHT_PT = 792;  // 11in * 72
+/* ── Main page-break-aware cursor ── */
+function checkPageBreak(pdf, y, needed, marginTop) {
+  var maxY = PG_H - MG_B;
+  if (y + needed > maxY) {
+    pdf.addPage('letter', 'portrait');
+    return marginTop;
+  }
+  return y;
+}
 
-  // Margins in points (0.47in * 72 = 33.84pt)
-  const MARGIN_PT = 33.84;
+/* ══════ WAIVER PDF BUILDER ══════ */
+async function buildWaiverPDF(gym, logoDataURL) {
+  var { jsPDF } = window.jspdf;
+  var pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
+  var col = parseHexColor(gym.color);
+  var warningHex = WARNING_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color;
+  var warnCol = parseHexColor(warningHex);
+  var h1Hex = gym.abbr === 'OAS' ? '#3e266b' : gym.color;
+  var h1Col = parseHexColor(h1Hex);
 
-  // Printable area in points
-  const CONTENT_WIDTH_PT = PDF_WIDTH_PT - (MARGIN_PT * 2);   // 544.32pt
-  const CONTENT_HEIGHT_PT = PDF_HEIGHT_PT - (MARGIN_PT * 2); // 724.32pt
+  /* ── Waiver uses tighter spacing to fit on 1 page ── */
+  var FS_BODY = 8.6, LH_BODY = 10.8;
+  var FS_H1 = 9.5, FS_WARNING = 7.8, FS_HEADER = 12.5;
+  var y = MG_T;
 
-  // Canvas dimensions (html2canvas at scale 4)
-  const canvasWidth = canvas.width;
-  const canvasHeight = canvas.height;
+  /* ── BRANDED HEADER BAR ── */
+  var hdrH = 38;
+  pdf.setFillColor(col.r, col.g, col.b);
+  pdf.rect(MG_L, y, CW, hdrH, 'F');
 
-  // Printable height in canvas pixels: 966px at scale 4 = 3864px
-  const pageHeightPx = 966 * 4;
+  /* Logo */
+  if (logoDataURL) {
+    try { pdf.addImage(logoDataURL, 'PNG', MG_L + 8, y + 4, 30, 30); } catch(e) {}
+  }
 
-  const totalPages = Math.ceil(canvasHeight / pageHeightPx);
+  /* Gym name */
+  pdf.setFontSize(FS_HEADER);
+  pdf.setFont('times', 'bold');
+  pdf.setTextColor(255, 255, 255);
+  var nameX = logoDataURL ? MG_L + 44 : MG_L + 8;
+  pdf.text(gym.name, nameX, y + hdrH/2 + FS_HEADER/3);
 
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'pt',
-    format: 'letter'
-  });
+  y += hdrH + 8;
 
-  for (let page = 0; page < totalPages; page++) {
-    if (page > 0) pdf.addPage('letter', 'portrait');
+  /* ── H1 TITLE ── */
+  pdf.setTextColor(h1Col.r, h1Col.g, h1Col.b);
+  pdf.setFontSize(FS_H1);
+  pdf.setFont('times', 'bold');
+  var h1Line1 = 'RELEASE OF LIABILITY, WAIVER OF CLAIMS, ASSUMPTION OF RISK,';
+  var h1Line2 = 'INDEMNITY, MEDICAL CERTIFICATION, AND CONSENT TO MEDICAL TREATMENT AGREEMENT';
+  var w1 = pdf.getTextWidth(h1Line1);
+  pdf.text(h1Line1, MG_L + (CW - w1)/2, y);
+  y += FS_H1 + 2;
+  var w2 = pdf.getTextWidth(h1Line2);
+  pdf.text(h1Line2, MG_L + (CW - w2)/2, y);
+  y += FS_H1 + 5;
 
-    const srcY = page * pageHeightPx;
-    const srcHeight = Math.min(pageHeightPx, canvasHeight - srcY);
+  /* ── WARNING BOX ── */
+  var warnText = 'BY SIGNING THIS AGREEMENT, YOU WILL WAIVE CERTAIN LEGAL RIGHTS, INCLUDING THE RIGHT TO SUE. PLEASE READ CAREFULLY!';
+  pdf.setFontSize(FS_WARNING);
+  pdf.setFont('times', 'bold');
+  var warnLines = pdf.splitTextToSize(warnText, CW - 20);
+  var warnBoxH = warnLines.length * (FS_WARNING + 2) + 8;
+  pdf.setDrawColor(warnCol.r, warnCol.g, warnCol.b);
+  pdf.setLineWidth(1.5);
+  pdf.roundedRect(MG_L, y, CW, warnBoxH, 3, 3, 'S');
+  pdf.setTextColor(warnCol.r, warnCol.g, warnCol.b);
+  for (var wi = 0; wi < warnLines.length; wi++) {
+    var wlw = pdf.getTextWidth(warnLines[wi]);
+    pdf.text(warnLines[wi], MG_L + (CW - wlw)/2, y + 4 + FS_WARNING + wi * (FS_WARNING + 2));
+  }
+  y += warnBoxH + 5;
 
-    // Create a temp canvas for this page slice
-    const pageCanvas = document.createElement('canvas');
-    pageCanvas.width = canvasWidth;
-    pageCanvas.height = pageHeightPx;
-    const ctx = pageCanvas.getContext('2d');
+  /* ── BODY PARAGRAPHS ── */
+  pdf.setTextColor(0, 0, 0);
 
-    // Fill white so last page doesn't have black at bottom
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+  var waiverParas = getWaiverParagraphs(gym);
 
-    // Copy the slice
-    ctx.drawImage(
-      canvas,
-      0, srcY, canvasWidth, srcHeight,
-      0, 0, canvasWidth, srcHeight
-    );
+  for (var pi = 0; pi < waiverParas.length; pi++) {
+    var para = waiverParas[pi];
 
-    // Add to PDF — place content within the 0.47in margins
-    const imgData = pageCanvas.toDataURL('image/jpeg', 0.92);
-    pdf.addImage(imgData, 'JPEG', MARGIN_PT, MARGIN_PT, CONTENT_WIDTH_PT, CONTENT_HEIGHT_PT);
+    if (para.type === 'indent') {
+      /* Indented paragraph */
+      var indentX = MG_L + 18;
+      var indentW = CW - 18;
+      var indSegs = parseInlineMarkup(para.html);
+      var indLines = wrapSegments(pdf, indSegs, FS_BODY, indentW);
+      for (var il = 0; il < indLines.length; il++) {
+        y = checkPageBreak(pdf, y, LH_BODY, MG_T);
+        drawLineSegments(pdf, indLines[il], indentX, y, FS_BODY);
+        y += LH_BODY;
+      }
+      y += 1.5;
+    } else if (para.type === 'sig') {
+      /* Signature area */
+      y = checkPageBreak(pdf, y, 24, MG_T);
+      y += 2;
+      var sigGroups = para.lines;
+      for (var si = 0; si < sigGroups.length; si++) {
+        var row = sigGroups[si];
+        var totalFlex = 0;
+        for (var sf = 0; sf < row.length; sf++) totalFlex += row[sf].flex;
+        var sigGap = 10;
+        var availW = CW - sigGap * (row.length - 1);
+        var sx = MG_L;
+        for (var sj = 0; sj < row.length; sj++) {
+          var fieldW = (row[sj].flex / totalFlex) * availW;
+          /* Signature line */
+          pdf.setDrawColor(0, 0, 0);
+          pdf.setLineWidth(0.5);
+          pdf.line(sx, y + 8, sx + fieldW, y + 8);
+          /* Label */
+          pdf.setFontSize(7);
+          pdf.setFont('times', 'normal');
+          pdf.setTextColor(85, 85, 85);
+          pdf.text(row[sj].label, sx, y + 16);
+          pdf.setTextColor(0, 0, 0);
+          sx += fieldW + sigGap;
+        }
+        y += 22;
+      }
+    } else {
+      /* Normal paragraph */
+      var segs = parseInlineMarkup(para.html);
+      var lines = wrapSegments(pdf, segs, FS_BODY, CW);
+      for (var li = 0; li < lines.length; li++) {
+        y = checkPageBreak(pdf, y, LH_BODY, MG_T);
+        drawLineSegments(pdf, lines[li], MG_L, y, FS_BODY);
+        y += LH_BODY;
+      }
+      y += 1.5;
+    }
   }
 
   return pdf;
 }
 
+/* Get waiver content as structured paragraphs (text only, no HTML rendering) */
+function getWaiverParagraphs(gym) {
+  return [
+    { type: 'p', html: 'I, the enrolled participant and/or the parent/guardian of the participant, desire to participate in gymnastics, cheer, dance, or ninja lessons, gymnastics, cheer, dance, or ninja classes, camps, parties, and/or other gym-related activities (\u201CActivities\u201D) offered by <strong>' + gym.name + '</strong> (\u201CCompany\u201D) and, in consideration for being permitted by the Company to participate in the Activities, agree to all the terms and conditions set forth in this agreement (\u201CAgreement\u201D).' },
+    { type: 'p', html: '<strong>ASSUMPTION OF RISK. I UNDERSTAND THAT GYMNASTICS INVOLVES HIGH-IMPACT, HIGH-VELOCITY ACTIVITIES AND EQUIPMENT, INCLUDING BUT NOT LIMITED TO BALANCE BEAMS, BARS, FOAM PITS, TRAMPOLINES, AND VAULTING BOARDS. I AM AWARE THAT THESE ACTIVITIES INVOLVE THE RISK OF SERIOUS INJURY, DISABILITY, DEATH, PROPERTY DAMAGE, AND INFECTION BY COMMUNICABLE DISEASE (INCLUDING, WITHOUT LIMITATION, COVID-19, HEPATITIS A, B AND C, AND INFLUENZA, AMONG OTHERS).</strong>' },
+    { type: 'p', html: '<strong>WAIVER, RELEASE, AGREEMENT NOT TO SUE, AND INDEMNIFICATION:</strong> In consideration for allowing participation in the Activities, and with knowledge of the dangers and risks involved, I, on behalf of myself or, as applicable, all minors and other participants on behalf of whom I sign this agreement, and for ourselves, our families, heirs, executors, estates, and administrators (\u201CReleasors\u201D) voluntarily waive and release any and all actions, causes of action, attorneys\u2019 fees, costs, expenses, suits, debts, dues, sums of money, accounts, reckonings, bonds, bills, specialties, covenants, contracts, controversies, agreements, promises, penalties, variances, trespasses, judgments, extent, executions, claims, and demands whatsoever, in law or equity, whether known or unknown, foreseen or unforeseen (\u201CClaims\u201D) against the Company, or its members, managers, officers, employees, agents, affiliates, successors and assigns (\u201CReleasees\u201D), arising out of or related to participation in the Activities, use of or presence at the facilities, and any administration of care, including, without limitation, claims of injury or death, whether arising out of the negligence of the Company or the Releasees or otherwise to the fullest extent allowed by law. Also, I, on behalf of myself and the Releasors, covenant, to the fullest extent allowed by law, not to make or bring any such Claims against the Company or the Releasees, and forever release, discharge, indemnify, and hold the Company and all Releasees harmless from all liability, losses, and damages under such Claims, and all expenses (including, without limitation, attorneys\u2019 fees) incurred in defending any such Claims.' },
+    { type: 'p', html: 'I acknowledge that there is a possibility that subsequent to the execution of this Agreement and any amendments thereto, I may discover facts or incur or suffer claims which were unknown or unsuspected at the time the Agreement or the applicable amendment was executed, and which if known by me at that time may have materially affected my decision to execute the Agreement or any amendments thereto. I acknowledge and agree that I am assuming any risk of such unknown facts and such unknown and unsuspected claims and, accordingly, I waive my rights under California Civil Code section 1542 and any other similar laws of other jurisdictions. SECTION 1542 OF THE CALIFORNIA CIVIL CODE STATES AS FOLLOWS:' },
+    { type: 'indent', html: '<strong>A GENERAL RELEASE DOES NOT EXTEND TO CLAIMS THAT THE CREDITOR OR RELEASING PARTY DOES NOT KNOW OR SUSPECT TO EXIST IN HIS OR HER FAVOR AT THE TIME OF EXECUTING THE RELEASE AND THAT, IF KNOWN BY HIM OR HER, WOULD HAVE MATERIALLY AFFECTED HIS OR HER SETTLEMENT WITH THE DEBTOR OR RELEASED PARTY.</strong>' },
+    { type: 'p', html: '<strong>MEDICAL CERTIFICATION, CONSENT TO TREATMENT, AND RELEASE:</strong> I hereby certify that the participant who will participate in the Activities is in good physical health and has no medical condition(s) that would prevent full participation in the Activities. I have notified the Company in writing of any medical/health problems of which the Company\u2019s staff should be aware prior to the participant participating in the Activities. In the event of any medical emergencies, I authorize any representatives of the Company to take whatever actions such persons deem necessary to have the participant assisted or treated. Further, I agree to pay all costs associated with medical care for and transportation of the participant to a medical facility, as needed. If a participant comes under a physician\u2019s care during the course of instruction at the Company, it is my responsibility to notify the Company\u2019s main office before the start of any class. If a participant is under a physician\u2019s care while participating in any Activities, I must provide the Company with a doctor\u2019s release permitting the participant to participate in the Activities.' },
+    { type: 'p', html: '<strong>ACKNOWLEDGMENT/AUTHORITY: I ACKNOWLEDGE AND AGREE THAT I HAVE CAREFULLY READ AND UNDERSTOOD ALL OF THE TERMS OF THIS AGREEMENT AND AGREE TO IT FREELY AND VOLUNTARILY. I WARRANT THAT I HAVE THE AUTHORITY AND EXPRESS CONSENT TO SIGN THIS AGREEMENT ON MY OWN BEHALF AND ON BEHALF OF THE RELEASORS.</strong>' },
+    { type: 'p', html: '<strong>SEVERABILITY:</strong> If any provision of this Agreement is found to be invalid, it shall be deemed severed from this Agreement, and the remaining provisions of this Agreement shall survive and remain in full force and effect.' },
+    { type: 'sig', lines: [
+      [{ label: 'Participant Name', flex: 1 }, { label: 'Parent/Guardian Printed Name', flex: 1 }, { label: 'Date of Birth (Participant)', flex: 1 }],
+      [{ label: 'Phone Number', flex: 2 }, { label: 'Email', flex: 2 }],
+      [{ label: 'Parent/Guardian Signature', flex: 2 }, { label: 'Date', flex: 1 }]
+    ]}
+  ];
+}
+
+/* ══════ POLICY PDF BUILDER ══════ */
+async function buildPolicyPDF(gym, logoDataURL) {
+  var { jsPDF } = window.jspdf;
+  var pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
+  var col = parseHexColor(gym.color);
+  var h1Hex = gym.abbr === 'OAS' ? '#3e266b' : gym.color;
+  var h1Col = parseHexColor(h1Hex);
+  var policyIntroHex = POLICY_INTRO_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color;
+  var piCol = parseHexColor(policyIntroHex);
+  var piBg = mixColors(gym.color2 || gym.color, '#ffffff', 0.15);
+
+  var FS_BODY = 9, LH_BODY = 12;
+  var FS_H1 = 10, FS_H2 = 9.5, FS_HEADER = 14;
+  var y = MG_T;
+
+  /* ── BRANDED HEADER BAR ── */
+  var hdrH = 44;
+  pdf.setFillColor(col.r, col.g, col.b);
+  pdf.rect(MG_L, y, CW, hdrH, 'F');
+  if (logoDataURL) {
+    try { pdf.addImage(logoDataURL, 'PNG', MG_L + 10, y + 5, 34, 34); } catch(e) {}
+  }
+  pdf.setFontSize(FS_HEADER);
+  pdf.setFont('times', 'bold');
+  pdf.setTextColor(255, 255, 255);
+  var nameX = logoDataURL ? MG_L + 52 : MG_L + 10;
+  pdf.text(gym.name, nameX, y + hdrH/2 + FS_HEADER/3);
+  y += hdrH + 12;
+
+  /* ── H1: POLICIES AND PROCEDURES ── */
+  pdf.setTextColor(h1Col.r, h1Col.g, h1Col.b);
+  pdf.setFontSize(FS_H1);
+  pdf.setFont('times', 'bold');
+  var h1t = 'POLICIES AND PROCEDURES';
+  pdf.text(h1t, MG_L + (CW - pdf.getTextWidth(h1t))/2, y);
+  y += FS_H1 + 8;
+
+  /* ── Policy Intro Box ── */
+  var introText = 'At ' + gym.name + ', we are dedicated to providing a world-class gymnastics and athletic experience. We continuously invest in state-of-the-art facilities, equipment, and comprehensive coach training.';
+  pdf.setFontSize(FS_BODY + 1);
+  pdf.setFont('times', 'normal');
+  var introLines = pdf.splitTextToSize(introText, CW - 24);
+  var introBoxH = introLines.length * (FS_BODY + 4) + 14;
+  pdf.setFillColor(piBg.r, piBg.g, piBg.b);
+  pdf.setDrawColor(piCol.r, piCol.g, piCol.b);
+  pdf.setLineWidth(1.5);
+  pdf.roundedRect(MG_L, y, CW, introBoxH, 5, 5, 'FD');
+  pdf.setTextColor(piCol.r, piCol.g, piCol.b);
+  for (var ii = 0; ii < introLines.length; ii++) {
+    var ilw = pdf.getTextWidth(introLines[ii]);
+    pdf.text(introLines[ii], MG_L + (CW - ilw)/2, y + 8 + (FS_BODY + 1) + ii * (FS_BODY + 4));
+  }
+  y += introBoxH + 10;
+  pdf.setTextColor(0, 0, 0);
+
+  /* ── Policy content ── */
+  var content = getPolicyContent(gym);
+
+  for (var ci = 0; ci < content.length; ci++) {
+    var item = content[ci];
+
+    if (item.type === 'h1') {
+      y = checkPageBreak(pdf, y, 28, MG_T);
+      y += 6;
+      pdf.setTextColor(h1Col.r, h1Col.g, h1Col.b);
+      pdf.setFontSize(FS_H1);
+      pdf.setFont('times', 'bold');
+      var hw = pdf.getTextWidth(item.text);
+      pdf.text(item.text, MG_L + (CW - hw)/2, y);
+      y += FS_H1 + 6;
+      pdf.setTextColor(0, 0, 0);
+
+    } else if (item.type === 'h2') {
+      y = checkPageBreak(pdf, y, 22, MG_T);
+      y += 8;
+      pdf.setFontSize(FS_H2);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(item.text, MG_L, y);
+      y += FS_H2 + 4;
+      pdf.setFont('times', 'normal');
+
+    } else if (item.type === 'p') {
+      var segs = parseInlineMarkup(item.html);
+      var lines = wrapSegments(pdf, segs, FS_BODY, CW);
+      for (var li = 0; li < lines.length; li++) {
+        y = checkPageBreak(pdf, y, LH_BODY, MG_T);
+        drawLineSegments(pdf, lines[li], MG_L, y, FS_BODY);
+        y += LH_BODY;
+      }
+      y += 4;
+
+    } else if (item.type === 'ul' || item.type === 'ol') {
+      var bulletIndent = 14;
+      for (var bi = 0; bi < item.items.length; bi++) {
+        var bItem = item.items[bi];
+        var bSegs = parseInlineMarkup(bItem.html);
+        var bLines = wrapSegments(pdf, bSegs, FS_BODY, CW - bulletIndent);
+        for (var bl = 0; bl < bLines.length; bl++) {
+          y = checkPageBreak(pdf, y, LH_BODY, MG_T);
+          if (bl === 0) {
+            pdf.setFontSize(FS_BODY);
+            pdf.setFont('times', 'normal');
+            pdf.text(item.type === 'ol' ? (bi+1)+'.' : '\u2022', MG_L, y);
+          }
+          drawLineSegments(pdf, bLines[bl], MG_L + bulletIndent, y, FS_BODY);
+          y += LH_BODY;
+        }
+        /* Nested sub-list */
+        if (bItem.sub) {
+          var subIndent = bulletIndent + 14;
+          for (var si = 0; si < bItem.sub.length; si++) {
+            var sSegs = parseInlineMarkup(bItem.sub[si]);
+            var sLines = wrapSegments(pdf, sSegs, FS_BODY, CW - subIndent);
+            for (var sl = 0; sl < sLines.length; sl++) {
+              y = checkPageBreak(pdf, y, LH_BODY, MG_T);
+              if (sl === 0) {
+                pdf.setFontSize(FS_BODY);
+                pdf.setFont('times', 'normal');
+                pdf.text('\u2022', MG_L + bulletIndent, y);
+              }
+              drawLineSegments(pdf, sLines[sl], MG_L + subIndent, y, FS_BODY);
+              y += LH_BODY;
+            }
+          }
+        }
+        y += 2;
+      }
+      y += 2;
+
+    } else if (item.type === 'sig') {
+      y = checkPageBreak(pdf, y, 30, MG_T);
+      y += 4;
+      var sigRows = item.lines;
+      for (var sr = 0; sr < sigRows.length; sr++) {
+        var row = sigRows[sr];
+        var totalFlex = 0;
+        for (var sf = 0; sf < row.length; sf++) totalFlex += row[sf].flex;
+        var sigGap = 10;
+        var availW = CW - sigGap * (row.length - 1);
+        var sx = MG_L;
+        for (var sj = 0; sj < row.length; sj++) {
+          var fieldW = (row[sj].flex / totalFlex) * availW;
+          pdf.setDrawColor(0, 0, 0);
+          pdf.setLineWidth(0.5);
+          pdf.line(sx, y + 8, sx + fieldW, y + 8);
+          pdf.setFontSize(7);
+          pdf.setFont('times', 'normal');
+          pdf.setTextColor(85, 85, 85);
+          pdf.text(row[sj].label, sx, y + 16);
+          pdf.setTextColor(0, 0, 0);
+          sx += fieldW + sigGap;
+        }
+        y += 22;
+      }
+    }
+  }
+
+  return pdf;
+}
+
+/* Get policy content as structured array */
+function getPolicyContent(gym) {
+  return [
+    { type: 'h2', text: 'Additional Guidelines:' },
+    { type: 'ul', items: [
+      { html: '<strong>Anniversary Fees:</strong> This $' + gym.fee + ' fee, which covers administrative services and membership benefits, is non-refundable.' },
+      { html: '<strong>Missed Classes:</strong> No refunds will be issued for missed classes. A \u201Cmissed class\u201D is defined as any scheduled class that a customer does not attend without prior arrangement. However, if a customer marks themselves absent in their customer portal at least 24 hours prior to the class, they may attend a makeup class. A customer may mark themselves absent up to 12 times per year.' },
+      { html: '<strong>Gym Cancellations:</strong> If a class is canceled by <strong>' + gym.name + '</strong>, we will reschedule the class to be completed within 30 days of the cancellation. To accommodate facility and instructor availability, the rescheduled lesson may be held on a different day and/or at a different time than your regularly scheduled class. While we will provide options for the makeup session, please note that specific days or times cannot be guaranteed. We may also provide makeup sessions in the form of other services of similar value, such as Open Gym or Kids Night Out events.' }
+    ]},
+    { type: 'p', html: '<strong>Modification Clause:</strong> <strong>' + gym.name + '</strong> reserves the right to modify, update, or change this refund policy at its sole discretion. Enrolled customers will be notified of any material changes via email at least 30 days prior to the effective date of the changes.' },
+    { type: 'p', html: '<strong>Acknowledgement:</strong> By enrolling in our classes, you acknowledge that you have read, understood, and accept the terms of this refund policy.' },
+    { type: 'h1', text: 'BILLING AGREEMENT' },
+    { type: 'p', html: 'All enrollments must be secured with payment before classes begin. Payments are accepted online, by phone, or in person at <strong>' + gym.name + '</strong>. Payment information must be kept up to date. If payment is declined (even after multiple attempts), enrollment will not be confirmed. When enrolling, a customer pays for a class in each week in the following month. When starting mid-month, the tuition will be prorated for the number of remaining weeks in the month. If a customer\u2019s selected class day falls on a holiday, the customer may attend a make-up class.' },
+    { type: 'h2', text: 'Holidays Observed:' },
+    { type: 'ul', items: [
+      { html: 'New Years Eve' }, { html: 'New Years Day' }, { html: 'Easter' },
+      { html: 'Memorial Day' }, { html: 'Independence Day' }, { html: 'Labor Day' },
+      { html: 'Thanksgiving' }, { html: 'Day After Thanksgiving (Black Friday)' },
+      { html: 'Christmas Eve' }, { html: 'Christmas Day' }
+    ]},
+    { type: 'p', html: 'Class payments are automatically charged to the credit card on file on the 15th of the prior month. For example, payment for the month of June will be processed on May 15th.' },
+    { type: 'ul', items: [
+      { html: 'Dates may vary based on holidays.' },
+      { html: 'A credit card on file is required for monthly payments.' }
+    ]},
+    { type: 'p', html: '<strong>IF PAYMENT IS NOT RECEIVED BY THE 1ST OF THE MONTH, THE ENROLLMENT WILL BE DROPPED AT THAT TIME.</strong>' },
+    { type: 'h2', text: 'ANNIVERSARY FEE' },
+    { type: 'ul', items: [
+      { html: 'An <strong>$' + gym.fee + '</strong> annual, non-refundable anniversary fee is due in full as of the date of the first class a customer enrolls in, and on each yearly anniversary month thereafter. This fee is fixed and will not be subject to proration under any circumstances, including mid-month enrollments or drop requests.' },
+      { html: 'This fee will automatically be added to your monthly payment once a year for the month in which it is due.' },
+      { html: 'This fee is separate from tuition and is automatically added only once per year.' }
+    ]},
+    { type: 'h2', text: 'DROP REQUESTS' },
+    { type: 'ul', items: [
+      { html: 'A 30 day notice is required to drop from a class.' },
+      { html: 'Requests to drop from a class are accepted through the iClassPro customer portal, phone app, in person or by phone.' },
+      { html: 'After the drop request has been approved, any enrollment will end 30 days from the date of the drop request.' },
+      { html: 'Following a drop request, payment for the upcoming month will be prorated dependent upon the drop date.', sub: ['For example: A drop request is submitted on April 18th and approved. The last day of class will be May 18. When payments are processed for the month of May, the billed payment will only be for the number of classes between May 1-18.'] }
+    ]},
+    { type: 'h2', text: 'MAKEUP CLASSES' },
+    { type: 'p', html: '<strong>iClassPro Terminology:</strong> Please note that the iClassPro management system uses the term \u201Ctoken\u201D or \u201Ctokens\u201D when referring to makeup classes. That term was created and used by the iClassPro software developer, not <strong>' + gym.name + '</strong>. A token refers to a customer\u2019s opportunity to attend a makeup class as described in the Refund Policy and this Billing Agreement. A \u201Ctoken\u201D has no cash value and is not redeemable for cash.' },
+    { type: 'p', html: 'To enroll in a makeup class, the customer must schedule themselves for a class in the customer portal, phone call or in person. Based on the required instructor-to-student ratio, <strong>' + gym.name + '</strong> cannot guarantee the availability of any particular makeup class. A customer may schedule makeup classes while actively enrolled. There will be no refund for missed makeup classes.' },
+    { type: 'h2', text: 'ABSENT INSTRUCTOR POLICY' },
+    { type: 'p', html: 'When instructors are absent from any class, <strong>' + gym.name + '</strong> will provide a substitute instructor. This is not grounds for a refund or rescheduling the class.' },
+    { type: 'h2', text: 'GYM SAFETY, DRESS CODE & CONDUCT' },
+    { type: 'ul', items: [
+      { html: '<strong>Dress Code:</strong> Leotards for Girls Gymnastics. Boys/Cheer/Tumbling/Ninja - Shorts and T-shirts without zippers, buttons, or any ornamentation that may injure a student or coach. Jewelry must not be worn during classes. Hair must be pulled up neatly and securely away from the face so that it stays up for the entire workout. Girls must not wear bows or other large hair ornaments that may cause discomfort during activity. Bare feet are required in the gym to prevent slipping.' },
+      { html: '<strong>Supervision:</strong> For children aged six and under, it is mandatory for a parent/guardian to remain on the premises. Adults are never allowed on the equipment.' },
+      { html: '<strong>Athlete Safety:</strong> We comply with USA Gymnastics (USAG) and SafeSport standards. Any adult with regular contact or authority over a minor has passed a background check and completed SafeSport training.' },
+      { html: '<strong>Food and Beverage:</strong> No food (including gum, candy) is allowed in the Gym; only water is allowed. Please remember to provide your child with a water bottle to stay hydrated.' },
+      { html: '<strong>Weapons Policy:</strong> All weapons are strictly prohibited in our facility at all times.' },
+      { html: '<strong>Pet Policy:</strong> The Company welcomes service animals while in the company of the disabled individual or a service animal trainer. The Company does request the service animal must remain harnessed or on a leash at all times. Appropriate paperwork certifying the need for a service animal must be provided to the Company prior to the service animal being allowed on the premises.' },
+      { html: '<strong>Spectator Policy:</strong> Only registered students under the supervision of an instructor are permitted to enter the designated instruction areas. Spectators are welcome to watch our classes and events from the designated viewing areas only. Spectators must always remain in the designated viewing area and should not enter the Gym floor. Parents or guardians are responsible for always supervising their children while in the viewing area. Spectators are not allowed to coach or give instructions to any gymnasts during classes.' },
+      { html: '<strong>Pick up/Drop off:</strong> Students cannot be dropped more than five minutes before the start of their class and must be picked up at their scheduled class end time. Your child cannot be picked up outside the facility \u2013 all parents/guardians are requested to enter the Gym to pick up their child.' }
+    ]},
+    { type: 'h2', text: 'CODE OF CONDUCT' },
+    { type: 'p', html: 'The goal of the Company is to provide a safe, healthy, and positive environment for everyone. In order to accomplish this goal, the family\u2019s observation of the following guidelines is required:' },
+    { type: 'ol', items: [
+      { html: 'The family will place the emotional, physical, health, safety, and overall wellbeing of the athlete above any desire to win.' },
+      { html: 'The family must show respect for all Gym staff, parents and observers, and other students. The Company strives to provide a positive and uplifting experience for all people in the facility, and requires everyone, including me/child, to contribute to this environment.' },
+      { html: 'The family must respect everyone\u2019s personal space, including that of other students. Family cannot touch or otherwise physically contact others while in the facility. Unwanted contact can make people feel unsafe or uncomfortable and is not permitted.' },
+      { html: 'The family must use appropriate language and behavior while in the facility. Inappropriate conduct can make others feel uncomfortable and is not permitted.' },
+      { html: 'The family must always listen to and follow the instructions of their coach and all other members of the Company\u2019s staff while in the facility. The family cannot interfere with others\u2019 ability to follow instructions. Improper participation in gymnastics, parkour, ninja warrior, or any other activity within the Gym and failure to follow instructions from staff can create risk of injury to me/minor participant or other students in the facility.' },
+      { html: 'My child must always stay with their assigned class and coach within the class\u2019s active area of instruction unless granted specific authorization by a member of the staff (i.e., child needing to use the restroom). Failure to stay with the group or within their designated area could create risk for me, my child, and/or other students.' },
+      { html: 'The family will be a role model of good sportsmanship and character and will abide by all the rules and policies set forth by the Company.' }
+    ]},
+    { type: 'p', html: 'All participants, including family members and spectators, must comply with this Code of Conduct. Failure to comply with this Code of Conduct may result in dismissal from the Gym, termination of membership with the Company, and/or eventual discontinuation from future participation.' },
+    { type: 'h2', text: 'ATHLETE SAFETY & REPORTING POLICY' },
+    { type: 'p', html: 'Every athlete has the right to train and compete safely. USA Gymnastics (\u201CUSAG\u201D) and the US Center for SafeSport (\u201CSafeSport\u201D) have established and continually updated policies governing rules and regulations for participants. These update policies are available on each organization\u2019s website (www.usagym.org and www.uscenterforsafesport.org). This Gym is committed to fostering a culture that actively works to prevent the opportunity for abuse to occur by meeting or exceeding the requirements set forth by these organizations. These policies stipulate mandatory reporting by adult athletes, coaches, and other gymnastics participants (including parents of youth athletes) and set boundaries of interactions between participants through prevention policies.' },
+    { type: 'p', html: 'Any adult with regular contact and/or authority over a minor must pass a background check and complete SafeSport training before initial contact with minor athletes and as an ongoing process. USAG Athlete members who turn 18 are also required to complete SafeSport education as a condition of their participation. Parents of youth athletes and athletes themselves are encouraged to complete optional training provided by SafeSport focused on recognizing, reporting, and preventing abuse and misconduct. These trainings are found below within this Policy.' },
+    { type: 'p', html: '<strong>Duty to Report:</strong> Any adult under USA Gymnastics\u2019 jurisdiction must report child abuse, including sexual misconduct. This requirement begins when an adult learns of facts that give reason to suspect any child has suffered an incident of Child Abuse or that adult is informed of an allegation of Child Abuse. The term \u201Cchild\u201D is not limited to athletes and includes any child. Reports must be made immediately both to relevant government agencies and SafeSport. Non-sexual misconduct must be reported to USAG or SafeSport when the adult becomes aware of it. If an individual is unsure about reporting, they should seek guidance from the local police department, department of child services, or child advocacy center. These authorities will understand the law in their jurisdiction. As best practice, the member should document the date, time, name of the local police department contacted, name of the officer, and the officer\u2019s badge number as confirmation of their efforts. Note: Child Abuse, and the failure to report Child Abuse are both Prohibited Conduct under the SafeSport Code.' },
+    { type: 'p', html: 'Again, all USAG members 18 years old and older are mandatory reporters and are required to report all instances of possible child abuse or neglect to law enforcement and state child services. Reports of sexual abuse or sexual misconduct must be made immediately. No one should investigate or attempt to evaluate the credibility or validity of such reports.' },
+    { type: 'p', html: '<strong>Where to report child abuse or neglect in the State:</strong>' },
+    { type: 'ul', items: [
+      { html: 'National Child Abuse Hotline 1-800-422-4453' },
+      { html: 'For a director on your specific state\u2019s child abuse hotline, please visit the following link: https://childhelphotline.org/' },
+      { html: 'If in doubt, please contact your local law enforcement agency (or dial 9-1-1)' }
+    ]},
+    { type: 'p', html: '<strong>Prevention Policies</strong> are in place to set boundaries on the interactions between Adult and Minor participants:' },
+    { type: 'ul', items: [
+      { html: 'All one-on-one contact between adult and minor participants must be observable and interruptible, including training, travel, and conversations.' },
+      { html: 'Parents are permitted to view all practices from the viewing mezzanine. Appropriate behavior is required of all observers.' },
+      { html: 'Adult participants will not transport a minor athlete one-on-one in a vehicle alone.' },
+      { html: 'Adult participants will not share lodging with minor athletes.' },
+      { html: 'All electronic communication between Adult participants and Minor athletes, including email, social media and any virtual training, must be open, transparent, and professional in nature.' },
+      { html: 'Any photos or videos of minor athletes must be taken in public view, observe standards of decency, and appropriately serve the best interest of the athlete.' },
+      { html: 'Adult participants are not permitted to be alone with a minor athlete in a locker room, changing area, or restroom.' },
+      { html: 'Personal or individual gifts are not permitted to be given to athletes by Adult participants.' },
+      { html: 'All medical modalities, situations, or treatments for athletes must be observable and interruptible with a minimum of 2 Adult participants physically present. Medical duties beyond immediate pain mitigation should be performed by a licensed professional. Coaches may not massage minor athletes.' },
+      { html: 'All restrictions from a medical professional for athletes experiencing pain and/or injury will be adhered to, including time frame, modifications, and alternative exercises.' }
+    ]},
+    { type: 'p', html: 'Please review the full policy documents available on the websites of USAG and SafeSport for more information on these matters.' },
+    { type: 'p', html: '<strong>Training for Parents and Youth Athletes:</strong> The Company and USAG encourage all parents to take useful steps to prevent abuse and misconduct. SafeSport has designed a free course for parents of youth athletes titled, \u201CParents Guide to Misconduct in Sport.\u201D This course focuses on recognizing, responding to, and preventing abuse and misconduct in their child\u2019s sport setting. Parents will come away equipped with information and tactics to minimize risks of harm to their children. To access the Center\u2019s training for parents, please visit https://safesporttrained.org/#/public-dashboard. Parents are also encouraged to enroll their child in a very important course designed by SafeSport titled, \u201CSafeSport for High School Athletes.\u201D This short 15-minute course focuses on bullying and hazing prevention, supporting friends who have experienced sexual abuse or misconduct, and resources for reporting. To access the Center\u2019s training athletes, please visit https://safesporttrained.org/#/public-dashboard. Additionally, you may receive a copy of USA Gymnastics: Sports Concussion Overview for your review. This document can also be obtained at the following link: https://static.usagym.org/PDFs/About%20USA%20Gymnastics/wellness/concussion_overview.pdf' },
+    { type: 'h2', text: 'Questions, Concerns, Feedback' },
+    { type: 'p', html: '<strong>Contact the front desk</strong> if you have questions or concerns about:' },
+    { type: 'ul', items: [
+      { html: 'Athlete progress' }, { html: 'Program information' },
+      { html: 'Facility information' }, { html: 'Financial issues' }
+    ]},
+    { type: 'p', html: '<strong>Contact USAG</strong> if you have questions or concerns about:' },
+    { type: 'ul', items: [
+      { html: 'Emotional misconduct' }, { html: 'Bullying' }, { html: 'Hazing' },
+      { html: 'Physical misconduct' }, { html: 'Retaliation related to SafeSport' },
+      { html: 'Prevention Policy violations' }
+    ]},
+    { type: 'p', html: '<strong>USA Gymnastics contact information:</strong>' },
+    { type: 'ul', items: [
+      { html: 'https://usagym.i-sight.com/portal (reporting portal)' },
+      { html: '(833) 844-7233' },
+      { html: 'usagym.org' }
+    ]},
+    { type: 'p', html: '<strong>Contact US Center for SafeSport</strong> if you have questions or concerns about:' },
+    { type: 'ul', items: [
+      { html: 'Sexual misconduct' },
+      { html: 'Criminal charges or dispositions involving child abuse or sexual misconduct' },
+      { html: 'Aiding and abetting as it relates to the Center\u2019s process' },
+      { html: 'Other inappropriate conduct as defined in the SafeSport Code' }
+    ]},
+    { type: 'p', html: '<strong>US Center for SafeSport contact information:</strong>' },
+    { type: 'ul', items: [
+      { html: '(833) 587-7233' },
+      { html: 'https://uscenterforsafesport.org/report-a-concern/' }
+    ]},
+    { type: 'p', html: '<strong>Contact local law enforcement agency</strong> regarding any instances of:' },
+    { type: 'ul', items: [
+      { html: 'Child abuse' },
+      { html: 'Sexual abuse or criminal activities involving a minor' }
+    ]},
+    { type: 'h2', text: 'PHOTO & VIDEO RELEASE' },
+    { type: 'p', html: 'By accepting or signing this Policies and Procedures agreement, I (\u201CParent/Legal Guardian\u201D or \u201CParticipant\u201D), on behalf of myself (and my Participant child(ren), if applicable), hereby give my consent to waive my rights against, indemnify, hold harmless, and release the Company from liability regarding the following set forth in this Photo & Video Release section:' },
+    { type: 'p', html: 'I give the Company authority (\u201CAuthority\u201D) to (i) film, record, and photograph my (and my Participant child(ren), if applicable) name, image, likeness, and voice on a video, audio, photographic, digital, electronic, or any other medium (\u201CRecording(s)\u201D); and (ii) use, reproduce, exhibit, or distribute the Recording(s) in whole or in part in perpetuity in any and all media throughout the universe (including, but not limited to, print and digital publications, video tapes, non-theatrical, home video, CD-ROM, internet, social media, digital media, and any other electronic or other medium presently in existence or invented in the future) for any lawful purpose that the Company and those acting pursuant to its authority deem appropriate, including but not limited to promotional, periodicals, recruiting, advertising, marketing campaign, press releases, handbooks, manuals, trainings, website, and any commercial or non-commercial use (\u201CUse\u201D). I waive any right to review, inspect, edit, or approve such Recording(s) or its Use now or in the future, whether that use is known or unknown to me, and I understand that I shall not receive any compensation as a result of its Use. I understand and agree that all such Recording(s) shall remain the property of the Company.' },
+    { type: 'p', html: 'I hereby waive any rights I may have and thereby release, indemnify, and hold harmless the Company from and against any and all claims, demands, actions, causes of actions, suits, costs, expenses, liabilities, and damages whatsoever that I may have from liability for any violation of any personal or proprietary right I may have in connection with the Recording(s) and the Use of my likeness, voice, or name in any medium, and expressly waive any rights to privacy I may have under the Family Educational Rights and Privacy Act (\u201CFERPA\u201D); Federal, State, Local, and/or any other applicable law; and that this Release is in compliance with each company\u2019s Privacy Notice and the Regulation (EU) 2016/679 (General Data Protection Regulation) (\u201CGDPR\u201D).' },
+    { type: 'h2', text: 'DISPUTE RESOLUTION' },
+    { type: 'p', html: '<strong>PLEASE REVIEW THIS SECTION CAREFULLY AS IT CONTAINS A MULTI-TIERED DISPUTE RESOLUTION PROCESS, WHICH WE BELIEVE WILL ASSIST US EFFECTIVELY AND EFFICIENTLY RESOLVE ANY DISPUTES THAT MAY ARISE BETWEEN US. BY AGREEING TO THESE TERMS, YOU ARE AGREEING TO FOLLOW THE DISPUTE RESOLUTION PROCESS DESCRIBED BELOW TO RESOLVE ANY DISPUTES BETWEEN US. IN DOING SO, YOU ARE AGREEING TO FINAL AND BINDING ARBITRATION THAT LIMITS YOUR RIGHTS TO BRING AN ACTION IN COURT AND HAVE DISPUTES DECIDED BY A JUDGE OR JURY.</strong>' },
+    { type: 'p', html: '<strong>(a). Voluntary Participation.</strong> Your agreement to the dispute resolution process described herein is voluntary and not necessary to obtain any services or products from us. If you do not agree to use the process, you may opt out of this part of our agreement by sending an email to <strong>info@' + gym.domain + '</strong> with \u201COpt Out of Dispute Resolution Agreement\u201D in the subject line. This email must be sent within 14 days of enrollment. To the fullest extent provided by law, your agreement includes the \u201CReleasors\u201D as defined in \u201CRelease of Liability, Waiver of Claims, Assumption of Risk, Indemnity, Medical Certification, and Consent to Medical Treatment Agreement.\u201D Your agreement to these terms and conditions and decision not to opt out of the process is your agreement to use the dispute resolution processes described herein, which is a material term of our agreement to provide you services or products.' },
+    { type: 'p', html: '<strong>(b). Scope.</strong> A \u201CDispute\u201D means any dispute, claim, or controversy (except those specifically exempted below) between us that in any way relates to or arises from any aspect of our relationship, including, without limitation, your use or attempted use of our website, customer portal, services or products we provide, and all matters relating to or arising from this agreement, including the formation, interpretation, performance, breach, termination, or validity of our agreement. A Dispute shall be subject to the process herein, regardless of whether it is based in contract, statute, regulation, ordinance, tort (including fraud, misrepresentation, fraudulent inducement, or negligence), or any other legal or equitable theory. This includes any Dispute that accrued before entering into this agreement. You further agree that our agreement shall be governed by the Federal Arbitration Act and federal arbitration law.' },
+    { type: 'p', html: '<strong>(c). Tier 1: Negotiation.</strong> Our General Manager, or his or her designee, is available in person, by phone or by email to address any concerns you may have regarding our services or products. Most concerns are quickly resolved in this manner to our customers\u2019 satisfaction. In an effort to accelerate resolution and reduce the cost of any Dispute between us, you and we agree to personally meet and confer telephonically or via videoconference in a good-faith effort to resolve informally any Dispute. If you are represented by counsel, your counsel may participate in the conference, but you must also participate in the conference, as will at least one of our corporate representatives. This tier is a necessary and mandatory precondition to mediation and binding arbitration and by entering into this agreement, you and we are representing that we have unconditionally agreed to follow this initial negotiation process to attempt to resolve any Dispute except as set forth herein. The parties are not required to proceed in this Tier 1 should both parties agree in a signed writing that negotiation would be \u201Cfutile.\u201D When one party believes that negotiation could be productive, then negotiation is not futile and the parties must proceed through this Tier 1 before proceeding to Tier 2. To initiate negotiation, the initiating party shall give written notice to the other party by certified mail, return receipt requested (and by sending a courtesy copy by email to <strong>info@' + gym.domain + '</strong>). The notice must describe the Dispute, explain the facts of the Dispute as the initiating party understands them, and inform the other party what is being requested to resolve the Dispute. A notice will not be valid, will not commence the time period for this tier, and will not allow a party to proceed to Tier 2 and Tier 3 unless the notice contains all of the information required by this paragraph. The designated negotiation representatives shall have ten (10) business days after such notice is received by certified mail to meet (in person or virtually) to negotiate in good faith and attempt to resolve the Dispute. The parties may agree to extend the negotiation period by mutual consent. \u201CGood faith\u201D means participating actively in negotiations and refraining from engaging in tactics intended to delay, obstruct, or prevent resolution; provided, however, that \u201Cgood faith\u201D shall not require a party to resolve the Dispute if a party believes that the proposed resolution is not reasonable or if a party is not able to comply with the resolution. Should a party not participate in good-faith negotiation, that party will waive any right to recover attorneys\u2019 fees, costs, and multiple or punitive damages in arbitration.' },
+    { type: 'p', html: '<strong>(d). Tier 2: Mediation.</strong> If the Dispute is not resolved through negotiation, or if negotiation is deemed futile (as defined above), a party wanting to pursue dispute resolution shall submit the Dispute to non-binding mediation, wherein the parties will, in good faith (as defined above), attempt to resolve the Dispute with a mediator. The parties will not be required to proceed in this Tier 2 should both parties agree in a signed writing that mediation would be futile (as defined above). Also, this tier does not apply to any Dispute that fall within the jurisdiction of any \u201CSmall Claims\u201D court in the area in which the services or products were provided (\u201CSmall Claims\u201D). For Small Claims, neither party is required to request or agree to mediation. For all other Disputes, this tier is a necessary and mandatory precondition to binding arbitration and by entering into this agreement, you are representing that you have unconditionally agreed to use mediation to attempt to resolve the Dispute except as provided herein. The mediation shall be conducted in accordance with the Consumer Mediation Procedures and Costs Rules of the American Arbitration Association. The parties shall mutually agree to a mediator and, if they are not able to agree, the mediator shall be selected by the American Arbitration Association. To initiate mediation, a party shall give written notice to the other party by certified mail, return receipt requested (and by sending a courtesy copy by email to <strong>info@' + gym.domain + '</strong>). The parties shall have thirty (30) calendar days after such notice is received by certified mail to schedule the mediation. The parties may agree to extend the mediation period by mutual consent. The mediation shall be held in the American Arbitration Association office nearest to the location of the school at which the lessons were provided, unless the parties otherwise agree to another location or to conduct the mediation virtually. The parties shall share the mediator\u2019s fees and all other mediation costs equally. Should a party not participate in good faith mediation, that party will waive any rights to recover attorneys\u2019 fees, costs, and multiple or punitive damages in arbitration.' },
+    { type: 'p', html: '<strong>(e). Tier 3: Arbitration.</strong> If a Dispute cannot be resolved through mediation within thirty (30) calendar days after the initiation of mediation (or as extended by the parties), if the parties decided not to pursue mediation (as set forth above), then a party wanting to pursue dispute resolution shall do so exclusively through binding arbitration, unless provided otherwise herein. By entering into our agreement, you are representing that you have unconditionally agreed to use arbitration to resolve the Dispute. The arbitration will be administered by JAMS in accordance with the JAMS Streamlined Arbitration Rules and Procedures (the \u201CJAMS Rules\u201D) effective as of the date of the initial notice of dispute, which rules are available at the JAMS website, http://www.jamsadr.com/rules-streamlined-arbitration. Also, the following terms and conditions apply to arbitration:' },
+    { type: 'ol', items: [
+      { html: 'The arbitrator shall be empowered to grant whatever relief would be available in a court under law or in equity.' },
+      { html: 'The arbitrator will provide a written award, but need not provide a \u201Creasoned award\u201D unless requested by a party before the arbitration hearing commences. The arbitrator\u2019s award shall be final and binding and may be entered in any court of competent jurisdiction. The parties\u2019 rights to recover attorneys\u2019 fees, costs and arbitration fees, if any, shall be governed by the laws that apply to the Dispute, as well as any applicable arbitration rules.' },
+      { html: 'The arbitrator shall determine the scope and enforceability of this agreement, including whether a Dispute is subject to dispute resolution as provided above, except as set forth in the exceptions below. The arbitrator has authority to decide all issues of validity, enforceability or arbitrability, including, but not limited to, where a party raises as a defense that any portion of this agreement is not enforceable, subject to the exceptions below. If a lawsuit filed in court includes claims or requests for relief that are arbitrable and claims or requests for relief that are not, you and we agree that any non-arbitrable claims or requests for relief shall be stayed pending the completion of the arbitration of the arbitrable claims or requests for relief.' },
+      { html: 'The following exceptions to arbitration shall apply:' }
+    ]},
+    { type: 'p', html: '<strong>a. Intellectual Property, Trade Secret, and Moral Rights Claims.</strong> Notwithstanding the parties\u2019 decision to resolve all disputes through arbitration, either party may bring an action in state or federal court that only asserts claims for patent infringement or invalidity, copyright infringement, piracy, moral rights violations, trademark infringement, and/or trade secret misappropriation.' },
+    { type: 'p', html: '<strong>b. Small Claims.</strong> Either party may also seek relief in a small claims court for any individual disputes or claims within the scope of that court\u2019s jurisdiction. If an arbitration is filed, before the arbitrator is formally appointed either party can send written notice to the opposing party and the applicable arbitration provider that it wants the case decided by a small claims court, after which the arbitration provider shall close the case (with no fees due or payable by either party to the arbitration provider). Any dispute about whether a claim qualifies for small claims court will be resolved by that court, not by the arbitrator. Seeking such relief shall not waive a party\u2019s right to arbitration under this agreement, and any filed arbitrations related to any action filed pursuant to this paragraph shall automatically be stayed (with no fees due or payable by either party to the arbitration provider) pending the outcome of such action.' },
+    { type: 'p', html: '<strong>c. Mass Arbitration Before National Arbitration and Mediation (\u201CNAM\u201D):</strong> Notwithstanding the parties\u2019 decision to have arbitrations administered by JAMS, if 25 or more demands for arbitration are filed relating to the same or similar subject matter and sharing common issues of law or fact, and counsel for the parties submitting the demands are the same or coordinated, you and we agree that this will constitute a \u201CMass Arbitration.\u201D If a Mass Arbitration is commenced, you and we agree that it shall not be governed by JAMS Rules or administered by JAMS. Instead, a Mass Arbitration shall be administered by NAM, and governed by the NAM Rules in effect when the Mass Arbitration is filed, excluding any rules that permit arbitration on a class-wide basis (the \u201CNAM Rules\u201D), and under the rules set forth in this agreement. The NAM Rules are available at https://namadr.com/resources/rules-fees-forms/ or by calling 1-800-358-2550. You and we agree that the Mass Arbitration shall be resolved using NAM\u2019s Mass Filing Supplemental Dispute Resolution Rules and Procedures, available at https://www.namadr.com/. Before any Mass Arbitration is filed with NAM, you and we agree to contact NAM jointly to advise that the parties intend to use NAM\u2019s Mass Filing Supplemental Dispute Resolution Rules and Procedures. The individual demands comprising the Mass Arbitration shall be submitted on NAM\u2019s claim form(s) and as directed by NAM. You and we agree that if either party fails or refuses to commence the Mass Arbitration before NAM rather than JAMS, you or we may seek an order from JAMS compelling compliance and directing administration of the Mass Arbitration before NAM. Pending resolution of any such requests, you and we agree that all arbitrations comprising the Mass Arbitration (and any obligation to pay arbitration fees) shall be stayed. If for any reason the provisions in this paragraph are found to be unenforceable, or if for any reason NAM declines to administer the Mass Arbitration, then the Disputes comprising the Mass Arbitration shall be administered by the AAA consistent with the provisions of the Dispute Resolution Section of these Terms of Use and in accordance with AAA Rules in effect when the Mass Arbitration is filed, including the AAA Supplementary Rules for Multiple Case Filings, available at https://adr.org.' },
+    { type: 'ol', items: [
+      { html: '<strong>Class and Collective Action Waiver. TO THE FULLEST EXTENT ALLOWED BY APPLICABLE LAW, EACH PARTY MAY BRING DISPUTES AGAINST THE OTHER PARTY ONLY IN AN INDIVIDUAL CAPACITY, AND NOT AS A CLASS ACTION, A COLLECTIVE ACTION, A CLASS ARBITRATION, OR IN ANY REPRESENTATIVE CAPACITY OR AS A PRIVATE ATTORNEY GENERAL.</strong> To the extent applicable law does not permit waiver of private attorney general rights, but permits them to be arbitrated, then such claims shall be resolved by arbitration.' }
+    ]},
+    { type: 'p', html: '<strong>(f). Confidentiality.</strong> All negotiations, mediations, and arbitration proceedings under this clause shall be confidential. Neither party shall disclose any information concerning any Dispute except to the extent necessary for enforcement of rights, as required by law, or with the express written consent of the parties.' },
+    { type: 'p', html: '<strong>(g). Choice of Law/Tolling Clause.</strong> This clause shall be governed by the laws of the State of Texas regardless of conflict of law principles. To the extent the processes above would prevent a party from filing a claim for arbitration or initiating a lawsuit within an applicable statute of limitations or statute of repose period, the parties agree that such limitation periods will be tolled from the day a party first notifies the other party of a Dispute and requests negotiation, as set forth above, to the date the parties are not able to resolve their dispute through mediation (\u201CTolling Period\u201D). Also, the parties agree not to use the Tolling Period as a basis to support any defense or argument concerning delay in asserting an arbitration or litigation claim, including, without limitation, any defense or arguments arising from the doctrine of laches.' },
+    { type: 'p', html: '<strong>(h). Dispute Resolution: Severance.</strong> If any provision in this agreement is found to be unenforceable, that provision shall be severed with the remainder of this agreement remaining in full force and effect. The foregoing shall not apply to \u201CClass and Collective Action Waiver\u201D above. This means that if the \u201CClass and Collective Action Waiver\u201D above is found to be unenforceable for any reason, this \u201CDispute Resolution\u201D section of our agreement shall be null and void.' },
+    { type: 'p', html: 'I represent and warrant that if I am purchasing something from <strong>' + gym.name + '</strong> that (i) any credit or bank account draft (ACH Draft) information I supply is true and complete, (ii) charges incurred by me will be honored by my credit card company or financial institution, and (iii) I will pay the charges incurred by me at the posted prices, including any applicable taxes, fees, and penalties. I acknowledge that a $10 handling charge will be incurred for any declined transactions and are payable before any further services are given.' },
+    { type: 'p', html: 'I hereby authorize this facility to charge my bank or credit card account for each month\u2019s tuition and fees. I acknowledge that payment for lessons is non-refundable as stated in the Refund Policy of which I have executed as well. I understand that upon entering into this agreement, I agree to be liable for and pay each month\u2019s tuition and fees. Should I dispute a charge through my financial institution, this will constitute a breach of contract possibly resulting in, but not limited to, penalties, additional fees, collection, legal action, and/or termination of any and/or all current and future services.' },
+    { type: 'p', html: '<strong>' + gym.name + '</strong> reserves the right to modify, update, or change any portion of this Billing Agreement at its sole discretion. Continued enrollment in our classes following the effective date of the modifications will constitute your acceptance of the revised terms. If you do not agree with any of the changes, please contact us promptly to discuss your options.' },
+    { type: 'p', html: '<strong>I acknowledge that I have read and accepted the general and financial policies as stated here. I understand that upon enrollment I am entering into a binding financial agreement with ' + gym.name + '.</strong>' },
+    { type: 'sig', lines: [
+      [{ label: 'Parent/Guardian Signature', flex: 2 }, { label: 'Date', flex: 1 }]
+    ]},
+    { type: 'p', html: '' },
+    { type: 'sig', lines: [
+      [{ label: 'Printed Name', flex: 1 }]
+    ]}
+  ];
+}
+
+/* ── Generate a single PDF for one gym + doc type ── */
+async function generateGymPDF(gym, docType) {
+  /* Pre-load logo as data URL at full resolution */
+  var logoDataURL = await loadImageAsDataURL(gym.logo);
+
+  var pdf;
+  if (docType === 'waiver') {
+    pdf = await buildWaiverPDF(gym, logoDataURL);
+  } else {
+    pdf = await buildPolicyPDF(gym, logoDataURL);
+  }
+
+  return pdf.output('arraybuffer');
+}
+
 /* ── Main Bulk Download Orchestrator ── */
 async function startBulkDownload() {
   // Guard: check libraries loaded
-  if (typeof window.jspdf === 'undefined' || typeof html2canvas === 'undefined' || typeof JSZip === 'undefined') {
+  if (typeof window.jspdf === 'undefined' || typeof JSZip === 'undefined') {
     showToast('PDF libraries not loaded. Check internet connection.');
     return;
   }
