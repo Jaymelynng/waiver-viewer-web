@@ -303,8 +303,8 @@
       text-align: center;
       font-size: 10pt;
       margin: 0 0 14px;
-      border: 2px solid var(--gym-color2, #1a1a1a);
-      color: var(--gym-color2, #1a1a1a);
+      border: 2px solid var(--gym-intro-color, var(--gym-color2, #1a1a1a));
+      color: var(--gym-intro-color, var(--gym-color2, #1a1a1a));
       background: color-mix(in srgb, var(--gym-color2, #1e293b) 15%, white);
       padding: 12px 18px;
       border-radius: 8px;
@@ -826,6 +826,7 @@ let currentDoc = 'waiver';
 
 /* Override warning text color for gyms with light brand colors (SGT=Scottsdale, CRR=Capital Round Rock) */
 const WARNING_COLOR_OVERRIDES = { SGT: '#000', CRR: '#000' };
+const POLICY_INTRO_COLOR_OVERRIDES = { SGT: '#000', CRR: '#000' };
 
 /* ═══════════════ BUILD GYM GRID ═══════════════ */
 function buildGrid() {
@@ -854,6 +855,7 @@ function selectGym(idx) {
   document.getElementById('viewer').style.setProperty('--gym-color', gym.color);
   document.getElementById('viewer').style.setProperty('--gym-color2', gym.color2 || gym.color);
   document.getElementById('viewer').style.setProperty('--gym-warning-color', WARNING_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color);
+  document.getElementById('viewer').style.setProperty('--gym-intro-color', POLICY_INTRO_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color);
   document.getElementById('backBtn').style.display = 'flex';
   document.getElementById('bulkDlBtn').classList.add('hidden');
 
@@ -1328,11 +1330,12 @@ async function generateGymPDF(gym, docType) {
 
   // Policy intro box colors + color-mix background
   if (docType === 'policy') {
+    var policyIntroColor = POLICY_INTRO_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color;
     var policyIntroEl = pageDiv.querySelector('.policy-intro');
     if (policyIntroEl) {
       policyIntroEl.style.background = policyIntroBg;
-      policyIntroEl.style.borderColor = gym.color2 || gym.color;
-      policyIntroEl.style.color = gym.color2 || gym.color;
+      policyIntroEl.style.borderColor = policyIntroColor;
+      policyIntroEl.style.color = policyIntroColor;
     }
   }
 
