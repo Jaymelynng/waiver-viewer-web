@@ -578,6 +578,10 @@ body {
         <div class="var-pill" onclick="copyVar('{{gym.name}}')">{{gym.name}} <span>· gym name</span></div>
         <div class="var-pill" onclick="copyVar('{{gym.fee}}')">{{gym.fee}} <span>· annual fee</span></div>
         <div class="var-pill" onclick="copyVar('{{gym.domain}}')">{{gym.domain}} <span>· email domain</span></div>
+        <div class="var-pill" onclick="copyVar('{{gym.email}}')">{{gym.email}} <span>· gym email</span></div>
+        <div class="var-pill" onclick="copyVar('{{gym.abbr}}')">{{gym.abbr}} <span>· abbreviation</span></div>
+        <div class="var-pill" onclick="copyVar('{{gym.color}}')">{{gym.color}} <span>· primary color</span></div>
+        <div class="var-pill" onclick="copyVar('{{gym.color2}}')">{{gym.color2}} <span>· secondary color</span></div>
       </div>
     </div>
 
@@ -629,16 +633,16 @@ var activeTab = 'waiver';
 var hasUnsaved = false;
 
 var DEFAULT_GYMS = [
-  { name: 'Capital Gymnastics Cedar Park', abbr: 'CCP', fee: '55', domain: 'capgymcpk.com' },
-  { name: 'Capital Gymnastics Pflugerville', abbr: 'CPF', fee: '55', domain: 'capgympfl.com' },
-  { name: 'Capital Gymnastics Round Rock', abbr: 'CRR', fee: '55', domain: 'capgymrnd.com' },
-  { name: 'Rowland Ballard - Atascocita', abbr: 'RBA', fee: '50', domain: 'rbatascocita.com' },
-  { name: 'Rowland Ballard - Kingwood', abbr: 'RBK', fee: '50', domain: 'rbkingwood.com' },
-  { name: 'Houston Gymnastics Academy', abbr: 'HGA', fee: '55', domain: 'houstongymnastics.com' },
-  { name: 'Estrella Gymnastics', abbr: 'EST', fee: '55', domain: 'estrellagym.com' },
-  { name: 'Oasis Gymnastics', abbr: 'OAS', fee: '55', domain: 'oasisgym.com' },
-  { name: 'Scottsdale Gymnastics', abbr: 'SGT', fee: '55', domain: 'scottsdalegymnastics.com' },
-  { name: 'Tigar Gymnastics', abbr: 'TIG', fee: '55', domain: 'tigargym.com' }
+  { name: 'Capital Gymnastics Cedar Park',  abbr: 'CCP', color: '#1f53a3', color2: '#bf0a30', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgymcpk.com', fee: '55', domain: 'capgymcpk.com' },
+  { name: 'Capital Gymnastics Pflugerville', abbr: 'CPF', color: '#1f53a3', color2: '#bf0a30', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgympfl.com', fee: '55', domain: 'capgympfl.com' },
+  { name: 'Capital Gymnastics Round Rock',   abbr: 'CRR', color: '#ff1493', color2: '#c0c0c0', logo: 'CRR-logo - 500x500.png', email: 'info@capgymrnd.com', fee: '55', domain: 'capgymrnd.com' },
+  { name: 'Rowland Ballard - Atascocita',    abbr: 'RBA', color: '#1a3c66', color2: '#c52928', logo: 'rba_rbk--logo - 500x500.png', email: 'info@rbatascocita.com', fee: '50', domain: 'rbatascocita.com' },
+  { name: 'Rowland Ballard - Kingwood',      abbr: 'RBK', color: '#1a3c66', color2: '#c52928', logo: 'rba_rbk--logo - 500x500.png', email: 'info@rbkingwood.com', fee: '50', domain: 'rbkingwood.com' },
+  { name: 'Houston Gymnastics Academy',      abbr: 'HGA', color: '#c91724', color2: '#262626', logo: 'hga--logo - 500x500.png', email: 'info@houstongymnastics.com', fee: '55', domain: 'houstongymnastics.com' },
+  { name: 'Estrella Gymnastics',             abbr: 'EST', color: '#011837', color2: '#666666', logo: 'est--logo - 500x500.png', email: 'info@estrellagym.com', fee: '55', domain: 'estrellagym.com' },
+  { name: 'Oasis Gymnastics',                abbr: 'OAS', color: '#3eb29f', color2: '#3eb29f', logo: 'oasis--logo - 500x500.png', email: 'info@oasisgym.com', fee: '55', domain: 'oasisgym.com' },
+  { name: 'Scottsdale Gymnastics',           abbr: 'SGT', color: '#c72b12', color2: '#e6e6e6', logo: 'sgt-logo - 500x500.png', email: 'info@scottsdalegymnastics.com', fee: '55', domain: 'scottsdalegymnastics.com' },
+  { name: 'Tigar Gymnastics',                abbr: 'TIG', color: '#f57f20', color2: '#0a3651', logo: 'tigar--logo - 500x500.png', email: 'info@tigargym.com', fee: '55', domain: 'tigargym.com' }
 ];
 
 /* ── Auth ── */
@@ -1035,7 +1039,11 @@ function substituteVars(text, gym) {
   if (!text) return text;
   return text.replace(/\{\{gym\.name\}\}/g, gym.name)
              .replace(/\{\{gym\.fee\}\}/g, String(gym.fee))
-             .replace(/\{\{gym\.domain\}\}/g, gym.domain);
+             .replace(/\{\{gym\.domain\}\}/g, gym.domain)
+             .replace(/\{\{gym\.email\}\}/g, gym.email || '')
+             .replace(/\{\{gym\.color\}\}/g, gym.color || '')
+             .replace(/\{\{gym\.color2\}\}/g, gym.color2 || '')
+             .replace(/\{\{gym\.abbr\}\}/g, gym.abbr || '');
 }
 
 function renderPreview() {

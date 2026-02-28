@@ -1021,7 +1021,11 @@ function substituteVars(text, gym) {
   if (!text) return text;
   return text.replace(/\{\{gym\.name\}\}/g, gym.name)
              .replace(/\{\{gym\.fee\}\}/g, String(gym.fee))
-             .replace(/\{\{gym\.domain\}\}/g, gym.domain);
+             .replace(/\{\{gym\.domain\}\}/g, gym.domain)
+             .replace(/\{\{gym\.email\}\}/g, gym.email || '')
+             .replace(/\{\{gym\.color\}\}/g, gym.color || '')
+             .replace(/\{\{gym\.color2\}\}/g, gym.color2 || '')
+             .replace(/\{\{gym\.abbr\}\}/g, gym.abbr || '');
 }
 
 function substituteSection(section, gym) {
