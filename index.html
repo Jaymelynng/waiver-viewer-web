@@ -900,7 +900,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const GYMS = [
+let GYMS = [
   { name: 'Capital Gymnastics Cedar Park',  abbr: 'CCP', color: '#1f53a3', color2: '#bf0a30', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgymcpk.com', fee: '55', domain: 'capgymcpk.com' },
   { name: 'Capital Gymnastics Pflugerville', abbr: 'CPF', color: '#1f53a3', color2: '#bf0a30', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgympfl.com', fee: '55', domain: 'capgympfl.com' },
   { name: 'Capital Gymnastics Round Rock',   abbr: 'CRR', color: '#ff1493', color2: '#c0c0c0', logo: 'CRR-logo - 500x500.png', email: 'info@capgymrnd.com', fee: '55', domain: 'capgymrnd.com' },
@@ -1087,6 +1087,12 @@ async function loadContent() {
     var resp = await fetch('/api/content');
     if (resp.ok) {
       CONTENT = await resp.json();
+      // Update gym data from API if available
+      if (CONTENT.gyms && CONTENT.gyms.length > 0) {
+        GYMS.length = 0;
+        CONTENT.gyms.forEach(function(g) { GYMS.push(g); });
+        buildGrid();
+      }
     }
   } catch (e) {
     /* API unavailable — hardcoded fallback used */

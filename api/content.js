@@ -16,6 +16,9 @@ export default async function handler(req, res) {
       if (!content) {
         return res.status(404).json({ error: 'Content not found. Run /api/seed first.' });
       }
+      // Also fetch gyms if stored
+      const gyms = await kv.get('gyms');
+      if (gyms) content.gyms = gyms;
       // Cache for 60s on CDN, revalidate in background
       res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
       return res.status(200).json(content);
@@ -35,7 +38,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid content. Must have waiver and policy keys.' });
     }
 
+    // Save content and gyms together (gyms are optional in PUT for backwards compat)
     await kv.set('content', content);
+    if (content.gyms) {
+      await kv.set('gyms', content.gyms);
+    }
     return res.status(200).json({ ok: true });
   }
 

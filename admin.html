@@ -341,6 +341,113 @@ body {
 }
 .add-section button:hover { border-color: #b48f8f; color: #8b6f6f; background: #faf5f5; }
 
+/* ── Gym Management ── */
+.gym-card-admin {
+  background: linear-gradient(145deg, #fafbfc 0%, #f0f2f5 100%);
+  border: 2px solid #c4cad4;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 0 #c4cad4, 0 6px 12px rgba(0,0,0,0.1);
+}
+.gym-card-header {
+  padding: 12px 16px;
+  background: #e8e8e8;
+  border-bottom: 1px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gym-card-header .gym-logo-preview {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid #d1d5db;
+}
+.gym-card-header .gym-name-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f2937;
+  flex: 1;
+}
+.gym-card-header .color-dots {
+  display: flex;
+  gap: 4px;
+}
+.gym-card-header .color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.gym-card-body {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.gym-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 4px;
+  letter-spacing: .5px;
+}
+.gym-field input, .gym-field select {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color .2s;
+  background: #fff;
+}
+.gym-field input:focus { border-color: #b48f8f; }
+.gym-field input[type="color"] {
+  height: 40px;
+  padding: 4px;
+  cursor: pointer;
+}
+.gym-field.full-width { grid-column: 1 / -1; }
+.gym-card-actions {
+  padding: 0 16px 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+.btn-remove {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ef4444;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-remove:hover { background: #fee2e2; border-color: #ef4444; }
+
+.add-gym-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #8b6f6f;
+  background: rgba(255,255,255,0.5);
+  border: 2px dashed #c4cad4;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all .15s;
+  margin-top: 8px;
+}
+.add-gym-btn:hover { border-color: #b48f8f; color: #b48f8f; background: #faf5f5; }
+
 /* ── Preview Modal ── */
 #previewModal {
   display: none;
@@ -476,9 +583,13 @@ body {
 
     <!-- Tabs -->
     <div class="tabs">
+      <button class="tab" id="tabGyms" onclick="switchTab('gyms')">Gyms</button>
       <button class="tab active" id="tabWaiver" onclick="switchTab('waiver')">Release & Waiver</button>
       <button class="tab" id="tabPolicy" onclick="switchTab('policy')">Policies & Procedures</button>
     </div>
+
+    <!-- Gym Editor -->
+    <div id="gymsEditor" style="display:none;"></div>
 
     <!-- Waiver Editor -->
     <div id="waiverEditor"></div>
@@ -513,10 +624,11 @@ body {
 
 var TOKEN = localStorage.getItem('admin_token') || null;
 var content = null;
+var gyms = null;
 var activeTab = 'waiver';
 var hasUnsaved = false;
 
-var GYMS = [
+var DEFAULT_GYMS = [
   { name: 'Capital Gymnastics Cedar Park', abbr: 'CCP', fee: '55', domain: 'capgymcpk.com' },
   { name: 'Capital Gymnastics Pflugerville', abbr: 'CPF', fee: '55', domain: 'capgympfl.com' },
   { name: 'Capital Gymnastics Round Rock', abbr: 'CRR', fee: '55', domain: 'capgymrnd.com' },
@@ -574,17 +686,22 @@ async function initEditor() {
     showToast('Could not load content. Run /api/seed first.');
     return;
   }
+  // Load gyms from API response or use defaults
+  gyms = content.gyms || JSON.parse(JSON.stringify(DEFAULT_GYMS));
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('editorScreen').style.display = 'block';
   renderEditor();
+  renderGymsEditor();
   buildPreviewGyms();
 }
 
 /* ── Tab Switching ── */
 function switchTab(tab) {
   activeTab = tab;
+  document.getElementById('tabGyms').classList.toggle('active', tab === 'gyms');
   document.getElementById('tabWaiver').classList.toggle('active', tab === 'waiver');
   document.getElementById('tabPolicy').classList.toggle('active', tab === 'policy');
+  document.getElementById('gymsEditor').style.display = tab === 'gyms' ? '' : 'none';
   document.getElementById('waiverEditor').style.display = tab === 'waiver' ? '' : 'none';
   document.getElementById('policyEditor').style.display = tab === 'policy' ? '' : 'none';
 }
@@ -777,9 +894,96 @@ function removeListItem(doc, sectionIdx, itemIdx) {
   markUnsaved();
 }
 
+/* ── Gym Editor ── */
+function renderGymsEditor() {
+  var container = document.getElementById('gymsEditor');
+  var html = '';
+  for (var i = 0; i < gyms.length; i++) {
+    var g = gyms[i];
+    html += '<div class="gym-card-admin">' +
+      '<div class="gym-card-header">' +
+        (g.logo ? '<img class="gym-logo-preview" src="' + g.logo + '" onerror="this.style.display=\'none\'">' : '') +
+        '<span class="gym-name-label">' + (g.name || 'New Gym') + '</span>' +
+        '<div class="color-dots">' +
+          '<div class="color-dot" style="background:' + (g.color || '#ccc') + '" title="Primary Color"></div>' +
+          '<div class="color-dot" style="background:' + (g.color2 || '#ccc') + '" title="Secondary Color"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="gym-card-body">' +
+        gymField('Gym Name', 'text', g.name, i, 'name') +
+        gymField('Abbreviation', 'text', g.abbr, i, 'abbr') +
+        gymField('Email', 'text', g.email, i, 'email') +
+        gymField('Annual Fee ($)', 'text', g.fee, i, 'fee') +
+        gymField('Email Domain', 'text', g.domain, i, 'domain') +
+        gymField('Logo Filename', 'text', g.logo, i, 'logo') +
+        gymFieldColor('Primary Color', g.color, i, 'color') +
+        gymFieldColor('Secondary Color', g.color2, i, 'color2') +
+      '</div>' +
+      '<div class="gym-card-actions">' +
+        '<button class="btn-remove" onclick="removeGym(' + i + ')">Remove Gym</button>' +
+      '</div>' +
+    '</div>';
+  }
+  html += '<button class="add-gym-btn" onclick="addGym()">+ Add New Gym</button>';
+  container.innerHTML = html;
+}
+
+function gymField(label, type, value, idx, field) {
+  return '<div class="gym-field">' +
+    '<label>' + label + '</label>' +
+    '<input type="' + type + '" value="' + (value || '').replace(/"/g, '&quot;') + '" oninput="updateGym(' + idx + ',\'' + field + '\',this.value)">' +
+  '</div>';
+}
+
+function gymFieldColor(label, value, idx, field) {
+  return '<div class="gym-field">' +
+    '<label>' + label + '</label>' +
+    '<input type="color" value="' + (value || '#666666') + '" oninput="updateGymColor(' + idx + ',\'' + field + '\',this.value)">' +
+  '</div>';
+}
+
+function updateGym(idx, field, value) {
+  gyms[idx][field] = value;
+  // Update header label if name changed
+  if (field === 'name') {
+    var headers = document.querySelectorAll('.gym-name-label');
+    if (headers[idx]) headers[idx].textContent = value || 'New Gym';
+  }
+  markUnsaved();
+}
+
+function updateGymColor(idx, field, value) {
+  gyms[idx][field] = value;
+  // Update color dot preview
+  var cards = document.querySelectorAll('.gym-card-admin');
+  if (cards[idx]) {
+    var dots = cards[idx].querySelectorAll('.color-dot');
+    if (field === 'color' && dots[0]) dots[0].style.background = value;
+    if (field === 'color2' && dots[1]) dots[1].style.background = value;
+  }
+  markUnsaved();
+}
+
+function addGym() {
+  gyms.push({ name: '', abbr: '', color: '#666666', color2: '#999999', logo: '', email: '', fee: '55', domain: '' });
+  renderGymsEditor();
+  markUnsaved();
+  // Scroll to the new gym card
+  var cards = document.querySelectorAll('.gym-card-admin');
+  if (cards.length) cards[cards.length - 1].scrollIntoView({ behavior: 'smooth' });
+}
+
+function removeGym(idx) {
+  if (!confirm('Remove ' + (gyms[idx].name || 'this gym') + '? This cannot be undone after saving.')) return;
+  gyms.splice(idx, 1);
+  renderGymsEditor();
+  markUnsaved();
+}
+
 /* ── Save ── */
 async function saveContent() {
   syncFromEditor();
+  content.gyms = gyms;
   var btn = document.getElementById('saveBtn');
   btn.disabled = true;
   btn.textContent = 'Saving...';
@@ -814,12 +1018,13 @@ function updateSaveStatus() {
 /* ── Preview ── */
 function buildPreviewGyms() {
   var sel = document.getElementById('previewGym');
-  sel.innerHTML = GYMS.map(function(g, i) { return '<option value="' + i + '">' + g.name + '</option>'; }).join('');
+  sel.innerHTML = gyms.map(function(g, i) { return '<option value="' + i + '">' + g.name + '</option>'; }).join('');
 }
 
 function openPreview() {
   syncFromEditor();
-  document.getElementById('previewDoc').value = activeTab;
+  buildPreviewGyms();
+  document.getElementById('previewDoc').value = (activeTab === 'gyms') ? 'waiver' : activeTab;
   document.getElementById('previewModal').classList.add('open');
   renderPreview();
 }
@@ -834,7 +1039,7 @@ function substituteVars(text, gym) {
 }
 
 function renderPreview() {
-  var gym = GYMS[document.getElementById('previewGym').value];
+  var gym = gyms[document.getElementById('previewGym').value];
   var docType = document.getElementById('previewDoc').value;
   var body = document.getElementById('previewBody');
 

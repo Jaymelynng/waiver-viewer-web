@@ -193,7 +193,20 @@ const DEFAULT_CONTENT = {
   }
 };
 
-export { DEFAULT_CONTENT };
+const DEFAULT_GYMS = [
+  { name: 'Capital Gymnastics Cedar Park',  abbr: 'CCP', color: '#1f53a3', color2: '#bf0a30', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgymcpk.com', fee: '55', domain: 'capgymcpk.com' },
+  { name: 'Capital Gymnastics Pflugerville', abbr: 'CPF', color: '#1f53a3', color2: '#bf0a30', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgympfl.com', fee: '55', domain: 'capgympfl.com' },
+  { name: 'Capital Gymnastics Round Rock',   abbr: 'CRR', color: '#ff1493', color2: '#c0c0c0', logo: 'CRR-logo - 500x500.png', email: 'info@capgymrnd.com', fee: '55', domain: 'capgymrnd.com' },
+  { name: 'Rowland Ballard - Atascocita',    abbr: 'RBA', color: '#1a3c66', color2: '#c52928', logo: 'rba_rbk--logo - 500x500.png', email: 'info@rbatascocita.com', fee: '50', domain: 'rbatascocita.com' },
+  { name: 'Rowland Ballard - Kingwood',      abbr: 'RBK', color: '#1a3c66', color2: '#c52928', logo: 'rba_rbk--logo - 500x500.png', email: 'info@rbkingwood.com', fee: '50', domain: 'rbkingwood.com' },
+  { name: 'Houston Gymnastics Academy',      abbr: 'HGA', color: '#c91724', color2: '#262626', logo: 'hga--logo - 500x500.png', email: 'info@houstongymnastics.com', fee: '55', domain: 'houstongymnastics.com' },
+  { name: 'Estrella Gymnastics',             abbr: 'EST', color: '#011837', color2: '#666666', logo: 'est--logo - 500x500.png', email: 'info@estrellagym.com', fee: '55', domain: 'estrellagym.com' },
+  { name: 'Oasis Gymnastics',                abbr: 'OAS', color: '#3eb29f', color2: '#3eb29f', logo: 'oasis--logo - 500x500.png', email: 'info@oasisgym.com', fee: '55', domain: 'oasisgym.com' },
+  { name: 'Scottsdale Gymnastics',           abbr: 'SGT', color: '#c72b12', color2: '#e6e6e6', logo: 'sgt-logo - 500x500.png', email: 'info@scottsdalegymnastics.com', fee: '55', domain: 'scottsdalegymnastics.com' },
+  { name: 'Tigar Gymnastics',                abbr: 'TIG', color: '#f57f20', color2: '#0a3651', logo: 'tigar--logo - 500x500.png', email: 'info@tigargym.com', fee: '55', domain: 'tigargym.com' }
+];
+
+export { DEFAULT_CONTENT, DEFAULT_GYMS };
 
 export default async function handler(req, res) {
   if (req.method !== 'POST' && req.method !== 'GET') {
@@ -213,6 +226,7 @@ export default async function handler(req, res) {
     }
 
     await kv.set('content', DEFAULT_CONTENT);
+    await kv.set('gyms', DEFAULT_GYMS);
     return res.status(200).json({
       ok: true,
       message: force ? 'Content overwritten with defaults.' : 'Content seeded successfully.',
