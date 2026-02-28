@@ -3,102 +3,392 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Waiver Hub Admin</title>
+<title>Waiver Hub · Admin</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #737373;
+  color: #1f2937;
+  min-height: 100vh;
+}
 
-/* ── Login Screen ── */
-#loginScreen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-.login-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,.08); padding: 40px; width: 360px; text-align: center; }
-.login-card h1 { font-size: 22px; margin-bottom: 6px; }
-.login-card p { font-size: 14px; color: #666; margin-bottom: 24px; }
-.login-card input { width: 100%; padding: 12px 16px; font-size: 18px; letter-spacing: 8px; text-align: center; border: 2px solid #ddd; border-radius: 8px; outline: none; transition: border-color .2s; }
-.login-card input:focus { border-color: #4361ee; }
-.login-card button { width: 100%; margin-top: 16px; padding: 12px; font-size: 15px; font-weight: 600; color: #fff; background: #4361ee; border: none; border-radius: 8px; cursor: pointer; transition: background .2s; }
-.login-card button:hover { background: #3a56d4; }
-.login-error { color: #e74c3c; font-size: 13px; margin-top: 12px; display: none; }
+/* ── Header ── */
+.admin-header {
+  background: linear-gradient(135deg, #5a5a5a 0%, #737373 100%);
+  border-bottom: 2px solid #b48f8f;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.admin-header h1 { font-size: 22px; color: #fff; font-weight: 700; }
+.admin-header .subtitle { font-size: 13px; color: #d4c5c5; margin-top: 2px; }
+.header-left { display: flex; align-items: center; gap: 14px; }
+.header-left a {
+  color: #d4c5c5;
+  text-decoration: none;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color .2s;
+}
+.header-left a:hover { color: #fff; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.save-status { font-size: 12px; color: #c5b8b8; }
+.save-status.unsaved { color: #f59e0b; font-weight: 600; }
 
-/* ── Editor Screen ── */
-#editorScreen { display: none; max-width: 960px; margin: 0 auto; padding: 20px; }
-.editor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.editor-header h1 { font-size: 20px; }
-.editor-header .actions { display: flex; gap: 8px; }
-.btn { padding: 8px 18px; font-size: 13px; font-weight: 600; border: none; border-radius: 6px; cursor: pointer; transition: all .2s; }
-.btn-primary { background: #4361ee; color: #fff; }
-.btn-primary:hover { background: #3a56d4; }
-.btn-secondary { background: #e9ecef; color: #333; }
-.btn-secondary:hover { background: #dde1e6; }
-.btn-danger { background: #e74c3c; color: #fff; }
-.btn-danger:hover { background: #c0392b; }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn {
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-save {
+  background: #b48f8f;
+  color: #fff;
+  box-shadow: 0 3px 0 #8b6f6f, 0 4px 8px rgba(0,0,0,0.25);
+}
+.btn-save:hover { transform: translateY(1px); box-shadow: 0 2px 0 #8b6f6f, 0 3px 6px rgba(0,0,0,0.25); }
+.btn-save:active { transform: translateY(3px); box-shadow: 0 0 0 #8b6f6f; }
+.btn-save:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.btn-light {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.btn-light:hover { background: rgba(255,255,255,0.25); }
+
+/* ── Login ── */
+#loginScreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+.login-card {
+  background: linear-gradient(145deg, #fafbfc 0%, #f0f2f5 100%);
+  border: 2px solid #c4cad4;
+  border-radius: 14px;
+  box-shadow: 0 6px 0 #c4cad4, 0 8px 20px rgba(0,0,0,0.2);
+  padding: 40px;
+  width: 380px;
+  text-align: center;
+}
+.login-card h1 { font-size: 24px; margin-bottom: 4px; color: #1f2937; }
+.login-card p { font-size: 14px; color: #6b7280; margin-bottom: 24px; }
+.login-card input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 24px;
+  letter-spacing: 10px;
+  text-align: center;
+  border: 2px solid #d1d5db;
+  border-radius: 10px;
+  outline: none;
+  transition: border-color .2s;
+  background: #fff;
+}
+.login-card input:focus { border-color: #b48f8f; }
+.login-card button {
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: #b48f8f;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #8b6f6f;
+  transition: all .2s;
+}
+.login-card button:hover { transform: translateY(1px); box-shadow: 0 2px 0 #8b6f6f; }
+.login-card button:active { transform: translateY(3px); box-shadow: none; }
+.login-error { color: #ef4444; font-size: 13px; margin-top: 12px; display: none; }
+
+/* ── Editor ── */
+#editorScreen { display: none; }
+.editor-body { max-width: 900px; margin: 0 auto; padding: 24px 20px 60px; }
 
 /* ── Tabs ── */
-.tabs { display: flex; gap: 4px; margin-bottom: 16px; }
-.tab { padding: 10px 20px; font-size: 14px; font-weight: 600; background: #e9ecef; border: none; border-radius: 8px 8px 0 0; cursor: pointer; color: #555; transition: all .2s; }
-.tab.active { background: #fff; color: #4361ee; box-shadow: 0 -2px 0 #4361ee inset; }
+.tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+.tab {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.15);
+  border: 2px solid transparent;
+  border-radius: 12px 12px 0 0;
+  cursor: pointer;
+  color: #e5e7eb;
+  transition: all .2s;
+}
+.tab.active {
+  background: #f0f2f5;
+  color: #1f2937;
+  border-color: #c4cad4;
+  border-bottom-color: #f0f2f5;
+}
 
-/* ── Variable Reference ── */
-.var-ref { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
-.var-ref h3 { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-.var-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.var-tag { display: inline-flex; align-items: center; gap: 6px; background: #f0f4ff; border: 1px solid #d0d8f0; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; transition: background .15s; }
-.var-tag:hover { background: #dce4ff; }
-.var-tag code { font-family: 'SF Mono', 'Fira Code', monospace; font-weight: 600; color: #4361ee; }
-.var-tag span { color: #666; }
+/* ── Help Tip ── */
+.help-tip {
+  background: linear-gradient(145deg, #fafbfc 0%, #f0f2f5 100%);
+  border: 2px solid #c4cad4;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 0 #c4cad4, 0 6px 12px rgba(0,0,0,0.1);
+}
+.help-tip h3 { font-size: 13px; color: #6b7280; margin-bottom: 8px; }
+.help-tip p { font-size: 13px; color: #4b5563; line-height: 1.6; }
+.help-tip .vars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.var-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #e8d5d5;
+  border: 1px solid #d4b8b8;
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .15s;
+  color: #5a3e3e;
+  font-weight: 600;
+}
+.var-pill:hover { background: #d4b8b8; }
+.var-pill span { font-weight: 400; color: #7a6060; }
 
 /* ── Section Cards ── */
-.section-list { display: flex; flex-direction: column; gap: 10px; }
-.section-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden; }
-.section-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #f8f9fa; border-bottom: 1px solid #eee; }
-.section-type { font-size: 11px; font-weight: 700; color: #fff; background: #6c757d; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
-.section-type.h1 { background: #4361ee; }
-.section-type.h2 { background: #7c3aed; }
-.section-type.p { background: #0ea5e9; }
-.section-type.ul { background: #10b981; }
-.section-type.ol { background: #f59e0b; }
-.section-type.sig { background: #6b7280; }
-.section-type.indent { background: #ec4899; }
-.section-actions { margin-left: auto; display: flex; gap: 4px; }
-.section-actions button { background: none; border: none; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 14px; color: #888; transition: all .15s; }
-.section-actions button:hover { background: #eee; color: #333; }
-.section-body { padding: 12px 14px; }
-.section-body textarea { width: 100%; min-height: 60px; padding: 8px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; line-height: 1.5; border: 1px solid #ddd; border-radius: 6px; resize: vertical; outline: none; transition: border-color .2s; }
-.section-body textarea:focus { border-color: #4361ee; }
+.section-card {
+  background: linear-gradient(145deg, #fafbfc 0%, #f0f2f5 100%);
+  border: 2px solid #c4cad4;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 0 #c4cad4, 0 6px 12px rgba(0,0,0,0.1);
+}
+.section-label {
+  padding: 10px 16px;
+  background: #e8e8e8;
+  border-bottom: 1px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.section-label .label-text {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: #6b7280;
+}
+.section-label .label-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.badge-title { background: #b48f8f; }
+.badge-paragraph { background: #6b7280; }
+.badge-heading { background: #5a5a5a; }
+.badge-list { background: #8b6f6f; }
+.badge-indent { background: #9ca3af; }
+.badge-sig { background: #4b5563; }
 
-/* ── List Item Editor ── */
-.list-items { display: flex; flex-direction: column; gap: 6px; }
-.list-item { display: flex; gap: 6px; align-items: flex-start; }
-.list-item textarea { flex: 1; min-height: 40px; padding: 6px 8px; font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; line-height: 1.4; border: 1px solid #ddd; border-radius: 4px; resize: vertical; outline: none; }
-.list-item textarea:focus { border-color: #4361ee; }
-.list-item .item-num { font-size: 12px; color: #888; padding-top: 8px; min-width: 18px; text-align: right; }
-.list-item button { background: none; border: none; cursor: pointer; color: #ccc; padding: 6px; font-size: 14px; }
-.list-item button:hover { color: #e74c3c; }
-.add-item-btn { font-size: 12px; color: #4361ee; background: none; border: 1px dashed #4361ee; border-radius: 4px; padding: 4px 10px; cursor: pointer; margin-top: 4px; transition: all .15s; }
-.add-item-btn:hover { background: #f0f4ff; }
+.section-actions { display: flex; gap: 2px; }
+.section-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #9ca3af;
+  transition: all .15s;
+}
+.section-actions button:hover { background: #d1d5db; color: #374151; }
 
-/* ── Sig Editor ── */
-.sig-preview { font-size: 12px; color: #888; padding: 8px; background: #f8f9fa; border-radius: 4px; }
+/* ── Editable Content Areas ── */
+.content-area {
+  padding: 16px;
+  min-height: 60px;
+  font-size: 14px;
+  line-height: 1.8;
+  outline: none;
+  cursor: text;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.content-area:focus {
+  background: #fff;
+}
+.content-area:empty::before {
+  content: 'Click to edit...';
+  color: #9ca3af;
+  font-style: italic;
+}
 
-/* ── Add Section ── */
-.add-section { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
-.add-section button { font-size: 12px; padding: 4px 10px; border-radius: 4px; border: 1px dashed #aaa; background: #fff; cursor: pointer; color: #555; transition: all .15s; }
-.add-section button:hover { border-color: #4361ee; color: #4361ee; background: #f0f4ff; }
+/* Style for headings in content */
+.content-area.heading-content {
+  font-size: 16px;
+  font-weight: 700;
+}
 
-/* ── Meta Fields (title, warning, intro) ── */
-.meta-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.06); padding: 14px; margin-bottom: 12px; }
-.meta-card label { display: block; font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; margin-bottom: 6px; }
-.meta-card textarea { width: 100%; padding: 8px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; line-height: 1.5; border: 1px solid #ddd; border-radius: 6px; resize: vertical; outline: none; }
-.meta-card textarea:focus { border-color: #4361ee; }
+/* ── List Items ── */
+.list-content { padding: 16px; }
+.list-item-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.list-item-row .marker {
+  font-size: 14px;
+  color: #6b7280;
+  padding-top: 2px;
+  min-width: 20px;
+  text-align: right;
+  font-weight: 600;
+}
+.list-item-row .item-content {
+  flex: 1;
+  min-height: 30px;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.7;
+  outline: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.list-item-row .item-content:focus {
+  border-color: #b48f8f;
+}
+.list-item-row .item-content:empty::before {
+  content: 'Click to edit...';
+  color: #9ca3af;
+  font-style: italic;
+}
+.list-item-row button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #d1d5db;
+  padding: 6px;
+  font-size: 16px;
+  border-radius: 4px;
+}
+.list-item-row button:hover { color: #ef4444; background: #fef2f2; }
 
-/* ── Preview ── */
-#previewModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: center; justify-content: center; }
+.add-item-btn {
+  font-size: 13px;
+  color: #8b6f6f;
+  background: none;
+  border: 2px dashed #c4cad4;
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all .15s;
+  margin-top: 4px;
+}
+.add-item-btn:hover { border-color: #b48f8f; color: #b48f8f; background: #faf5f5; }
+
+/* ── Signature Preview ── */
+.sig-preview {
+  padding: 16px;
+  font-size: 13px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* ── Add Section Buttons ── */
+.add-section {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.add-section button {
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 2px dashed #c4cad4;
+  background: rgba(255,255,255,0.5);
+  cursor: pointer;
+  color: #6b7280;
+  font-weight: 600;
+  transition: all .15s;
+}
+.add-section button:hover { border-color: #b48f8f; color: #8b6f6f; background: #faf5f5; }
+
+/* ── Preview Modal ── */
+#previewModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
 #previewModal.open { display: flex; }
-.preview-container { background: #fff; border-radius: 12px; width: 90%; max-width: 800px; max-height: 90vh; overflow: auto; padding: 0; }
-.preview-toolbar { position: sticky; top: 0; background: #fff; padding: 12px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px; z-index: 1; }
-.preview-toolbar select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
-.preview-toolbar .close-btn { margin-left: auto; background: none; border: none; font-size: 20px; cursor: pointer; color: #888; padding: 4px 8px; }
-.preview-toolbar .close-btn:hover { color: #333; }
+.preview-container {
+  background: #fff;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.preview-toolbar {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  padding: 14px 20px;
+  border-bottom: 2px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1;
+}
+.preview-toolbar select {
+  padding: 8px 12px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.preview-toolbar .close-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 4px 8px;
+}
+.preview-toolbar .close-btn:hover { color: #374151; }
 .preview-body { padding: 30px; }
 .preview-body h1 { font-size: 14px; text-align: center; margin: 16px 0 8px; color: #333; }
 .preview-body h2 { font-size: 13px; margin: 14px 0 6px; }
@@ -111,17 +401,28 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .preview-body .sig-label { font-size: 10px; color: #666; margin-top: 2px; }
 
 /* ── Toast ── */
-.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #333; color: #fff; padding: 10px 24px; border-radius: 8px; font-size: 14px; transition: transform .3s; z-index: 2000; }
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #374151;
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: transform .3s;
+  z-index: 2000;
+}
 .toast.show { transform: translateX(-50%) translateY(0); }
-
-/* ── Save Status ── */
-.save-status { font-size: 12px; color: #888; display: flex; align-items: center; gap: 4px; }
-.save-status.unsaved { color: #e74c3c; }
 
 /* ── Responsive ── */
 @media (max-width: 640px) {
-  #editorScreen { padding: 12px; }
-  .editor-header { flex-direction: column; gap: 10px; }
+  .admin-header { flex-direction: column; gap: 10px; text-align: center; }
+  .header-right { flex-wrap: wrap; justify-content: center; }
+  .editor-body { padding: 16px 12px; }
   .tabs { overflow-x: auto; }
   .preview-container { width: 98%; }
 }
@@ -129,90 +430,69 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 </head>
 <body>
 
-<!-- ═══════════ LOGIN SCREEN ═══════════ -->
+<!-- ═══════════ LOGIN ═══════════ -->
 <div id="loginScreen">
   <div class="login-card">
-    <h1>Waiver Hub Admin</h1>
-    <p>Enter your PIN to continue</p>
-    <input type="password" id="pinInput" maxlength="8" inputmode="numeric" placeholder="PIN" autocomplete="off">
+    <h1>Waiver Hub</h1>
+    <p>Enter your admin PIN</p>
+    <input type="password" id="pinInput" maxlength="8" inputmode="numeric" placeholder="· · · · · ·" autocomplete="off">
     <button onclick="doLogin()">Sign In</button>
     <div class="login-error" id="loginError"></div>
   </div>
 </div>
 
-<!-- ═══════════ EDITOR SCREEN ═══════════ -->
+<!-- ═══════════ EDITOR ═══════════ -->
 <div id="editorScreen">
-  <div class="editor-header">
-    <h1>Content Editor</h1>
-    <div class="actions">
+  <div class="admin-header">
+    <div>
+      <div class="header-left">
+        <a href="/">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back to Site
+        </a>
+      </div>
+      <h1>Waiver Hub · Admin</h1>
+      <div class="subtitle">Edit your waiver and policy documents</div>
+    </div>
+    <div class="header-right">
       <span class="save-status" id="saveStatus">All changes saved</span>
-      <button class="btn btn-secondary" onclick="openPreview()">Preview</button>
-      <button class="btn btn-primary" id="saveBtn" onclick="saveContent()">Save Changes</button>
-      <button class="btn btn-secondary" onclick="doLogout()">Logout</button>
+      <button class="btn btn-light" onclick="openPreview()">Preview</button>
+      <button class="btn btn-save" id="saveBtn" onclick="saveContent()">Save Changes</button>
+      <button class="btn btn-light" onclick="doLogout()">Logout</button>
     </div>
   </div>
 
-  <!-- Variable Reference -->
-  <div class="var-ref">
-    <h3>Available Variables</h3>
-    <div class="var-tags">
-      <div class="var-tag" onclick="copyVar('{{gym.name}}')"><code>{{gym.name}}</code> <span>Gym name</span></div>
-      <div class="var-tag" onclick="copyVar('{{gym.fee}}')"><code>{{gym.fee}}</code> <span>Annual fee ($)</span></div>
-      <div class="var-tag" onclick="copyVar('{{gym.domain}}')"><code>{{gym.domain}}</code> <span>Email domain</span></div>
+  <div class="editor-body">
+    <!-- Help -->
+    <div class="help-tip">
+      <h3>How to edit</h3>
+      <p>Click on any text below to edit it directly. <strong>Bold text</strong> will show as bold. Use these placeholders and they'll be replaced with each gym's info:</p>
+      <div class="vars">
+        <div class="var-pill" onclick="copyVar('{{gym.name}}')">{{gym.name}} <span>· gym name</span></div>
+        <div class="var-pill" onclick="copyVar('{{gym.fee}}')">{{gym.fee}} <span>· annual fee</span></div>
+        <div class="var-pill" onclick="copyVar('{{gym.domain}}')">{{gym.domain}} <span>· email domain</span></div>
+      </div>
     </div>
-  </div>
 
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab active" id="tabWaiver" onclick="switchTab('waiver')">Release & Waiver</button>
-    <button class="tab" id="tabPolicy" onclick="switchTab('policy')">Policies & Procedures</button>
-  </div>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" id="tabWaiver" onclick="switchTab('waiver')">Release & Waiver</button>
+      <button class="tab" id="tabPolicy" onclick="switchTab('policy')">Policies & Procedures</button>
+    </div>
 
-  <!-- Waiver Editor -->
-  <div id="waiverEditor">
-    <div class="meta-card">
-      <label>Title (one line per row)</label>
-      <textarea id="waiverTitle" rows="2" oninput="markUnsaved()"></textarea>
-    </div>
-    <div class="meta-card">
-      <label>Warning Box Text</label>
-      <textarea id="waiverWarning" rows="2" oninput="markUnsaved()"></textarea>
-    </div>
-    <div class="section-list" id="waiverSections"></div>
-    <div class="add-section">
-      <button onclick="addSection('waiver','p')">+ Paragraph</button>
-      <button onclick="addSection('waiver','indent')">+ Indented</button>
-      <button onclick="addSection('waiver','sig')">+ Signature</button>
-    </div>
-  </div>
+    <!-- Waiver Editor -->
+    <div id="waiverEditor"></div>
 
-  <!-- Policy Editor -->
-  <div id="policyEditor" style="display:none;">
-    <div class="meta-card">
-      <label>Title</label>
-      <textarea id="policyTitle" rows="1" oninput="markUnsaved()"></textarea>
-    </div>
-    <div class="meta-card">
-      <label>Intro Text (HTML, use variables)</label>
-      <textarea id="policyIntro" rows="2" oninput="markUnsaved()"></textarea>
-    </div>
-    <div class="section-list" id="policySections"></div>
-    <div class="add-section">
-      <button onclick="addSection('policy','h1')">+ H1</button>
-      <button onclick="addSection('policy','h2')">+ H2</button>
-      <button onclick="addSection('policy','p')">+ Paragraph</button>
-      <button onclick="addSection('policy','ul')">+ Bullet List</button>
-      <button onclick="addSection('policy','ol')">+ Numbered List</button>
-      <button onclick="addSection('policy','sig')">+ Signature</button>
-    </div>
+    <!-- Policy Editor -->
+    <div id="policyEditor" style="display:none;"></div>
   </div>
 </div>
 
-<!-- ═══════════ PREVIEW MODAL ═══════════ -->
+<!-- ═══════════ PREVIEW ═══════════ -->
 <div id="previewModal" onclick="if(event.target===this)closePreview()">
   <div class="preview-container">
     <div class="preview-toolbar">
-      <label>Preview as:</label>
+      <label style="font-weight:600;">Preview as:</label>
       <select id="previewGym" onchange="renderPreview()"></select>
       <select id="previewDoc" onchange="renderPreview()">
         <option value="waiver">Release & Waiver</option>
@@ -224,31 +504,29 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-/* ═══════════════════════════════════════════════
-   ADMIN EDITOR
-   ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   ADMIN EDITOR — Waiver Hub
+   ═══════════════════════════════════════ */
 
 var TOKEN = localStorage.getItem('admin_token') || null;
-var content = null; // loaded from API
+var content = null;
 var activeTab = 'waiver';
 var hasUnsaved = false;
 
-/* Sample gyms for preview (same as main site) */
 var GYMS = [
-  { name: 'Powers Gymnastics Cedar Park', abbr: 'PGCP', fee: 55, domain: 'powersgym.com', color: '#1a3a6b' },
-  { name: 'Powers Gymnastics Round Rock', abbr: 'PGRR', fee: 55, domain: 'powersgym.com', color: '#1a3a6b' },
-  { name: 'Powers Gymnastics San Antonio', abbr: 'PGSA', fee: 55, domain: 'powersgym.com', color: '#1a3a6b' },
-  { name: 'Powers Gymnastics Georgetown', abbr: 'PGGT', fee: 55, domain: 'powersgym.com', color: '#1a3a6b' },
-  { name: 'Reach Gymnastics', abbr: 'REACH', fee: 55, domain: 'reachgym.com', color: '#dc2626' },
-  { name: 'Flips Gymnastics', abbr: 'FLIPS', fee: 55, domain: 'flipsgym.com', color: '#ea580c' },
-  { name: 'Infinity Gymnastics', abbr: 'INF', fee: 55, domain: 'infinitygym.com', color: '#7c3aed' },
-  { name: 'TopFlight Gymnastics', abbr: 'TFG', fee: 55, domain: 'topflightgym.com', color: '#0ea5e9' },
-  { name: 'Texas Dreams Gymnastics', abbr: 'TDG', fee: 55, domain: 'texasdreamsgym.com', color: '#15803d' },
-  { name: 'OAS Gymnastics', abbr: 'OAS', fee: 55, domain: 'oasgym.com', color: '#4338ca' }
+  { name: 'Capital Gymnastics Cedar Park', abbr: 'CCP', fee: '55', domain: 'capgymcpk.com' },
+  { name: 'Capital Gymnastics Pflugerville', abbr: 'CPF', fee: '55', domain: 'capgympfl.com' },
+  { name: 'Capital Gymnastics Round Rock', abbr: 'CRR', fee: '55', domain: 'capgymrnd.com' },
+  { name: 'Rowland Ballard - Atascocita', abbr: 'RBA', fee: '50', domain: 'rbatascocita.com' },
+  { name: 'Rowland Ballard - Kingwood', abbr: 'RBK', fee: '50', domain: 'rbkingwood.com' },
+  { name: 'Houston Gymnastics Academy', abbr: 'HGA', fee: '55', domain: 'houstongymnastics.com' },
+  { name: 'Estrella Gymnastics', abbr: 'EST', fee: '55', domain: 'estrellagym.com' },
+  { name: 'Oasis Gymnastics', abbr: 'OAS', fee: '55', domain: 'oasisgym.com' },
+  { name: 'Scottsdale Gymnastics', abbr: 'SGT', fee: '55', domain: 'scottsdalegymnastics.com' },
+  { name: 'Tigar Gymnastics', abbr: 'TIG', fee: '55', domain: 'tigargym.com' }
 ];
 
 /* ── Auth ── */
@@ -257,7 +535,6 @@ async function doLogin() {
   if (!pin) return;
   var errEl = document.getElementById('loginError');
   errEl.style.display = 'none';
-
   try {
     var resp = await fetch('/api/auth', {
       method: 'POST',
@@ -297,10 +574,9 @@ async function initEditor() {
     showToast('Could not load content. Run /api/seed first.');
     return;
   }
-
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('editorScreen').style.display = 'block';
-  populateEditor();
+  renderEditor();
   buildPreviewGyms();
 }
 
@@ -313,143 +589,197 @@ function switchTab(tab) {
   document.getElementById('policyEditor').style.display = tab === 'policy' ? '' : 'none';
 }
 
-/* ── Populate Editor from content ── */
-function populateEditor() {
-  // Waiver meta
-  document.getElementById('waiverTitle').value = content.waiver.title.join('\n');
-  document.getElementById('waiverWarning').value = content.waiver.warning;
-  renderSectionList('waiver');
-
-  // Policy meta
-  document.getElementById('policyTitle').value = content.policy.title;
-  document.getElementById('policyIntro').value = content.policy.intro;
-  renderSectionList('policy');
-
+/* ── Render Full Editor ── */
+function renderEditor() {
+  renderDocEditor('waiver');
+  renderDocEditor('policy');
   hasUnsaved = false;
   updateSaveStatus();
 }
 
-/* ── Render Section List ── */
-function renderSectionList(doc) {
-  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
-  var container = document.getElementById(doc + 'Sections');
-  container.innerHTML = '';
+function renderDocEditor(doc) {
+  var container = document.getElementById(doc + 'Editor');
+  var data = content[doc];
+  var html = '';
 
-  for (var i = 0; i < sections.length; i++) {
-    var s = sections[i];
-    var card = document.createElement('div');
-    card.className = 'section-card';
-
-    var header = '<div class="section-header">' +
-      '<span class="section-type ' + s.type + '">' + s.type + '</span>' +
-      '<span style="font-size:12px;color:#aaa;">#' + (i + 1) + '</span>' +
-      '<div class="section-actions">' +
-        (i > 0 ? '<button title="Move up" onclick="moveSection(\'' + doc + '\',' + i + ',-1)">&#9650;</button>' : '') +
-        (i < sections.length - 1 ? '<button title="Move down" onclick="moveSection(\'' + doc + '\',' + i + ',1)">&#9660;</button>' : '') +
-        '<button title="Delete" onclick="deleteSection(\'' + doc + '\',' + i + ')">&#10005;</button>' +
-      '</div></div>';
-
-    var body = '<div class="section-body">';
-    if (s.type === 'p' || s.type === 'indent') {
-      body += '<textarea rows="3" oninput="updateSection(\'' + doc + '\',' + i + ',\'html\',this.value)">' + escapeHTML(s.html || '') + '</textarea>';
-    } else if (s.type === 'h1' || s.type === 'h2') {
-      body += '<textarea rows="1" oninput="updateSection(\'' + doc + '\',' + i + ',\'text\',this.value)">' + escapeHTML(s.text || '') + '</textarea>';
-    } else if (s.type === 'ul' || s.type === 'ol') {
-      body += renderListEditor(doc, i, s);
-    } else if (s.type === 'sig') {
-      body += '<div class="sig-preview">Signature fields: ' + s.lines.map(function(row) {
-        return row.map(function(f) { return f.label; }).join(', ');
-      }).join(' | ') + '</div>';
-    }
-    body += '</div>';
-
-    card.innerHTML = header + body;
-    container.appendChild(card);
+  // Title
+  if (doc === 'waiver') {
+    html += buildSectionCard('Document Title', 'title', 'badge-title',
+      '<div class="content-area heading-content" contenteditable="true" data-field="waiver.title" oninput="markUnsaved()">' + data.title.join('<br>') + '</div>');
+    html += buildSectionCard('Warning Box', 'warning', 'badge-title',
+      '<div class="content-area" contenteditable="true" data-field="waiver.warning" oninput="markUnsaved()">' + data.warning + '</div>');
+  } else {
+    html += buildSectionCard('Document Title', 'title', 'badge-title',
+      '<div class="content-area heading-content" contenteditable="true" data-field="policy.title" oninput="markUnsaved()">' + data.title + '</div>');
+    html += buildSectionCard('Intro Text', 'intro', 'badge-title',
+      '<div class="content-area" contenteditable="true" data-field="policy.intro" oninput="markUnsaved()">' + data.intro + '</div>');
   }
+
+  // Sections
+  var sections = data.sections;
+  for (var i = 0; i < sections.length; i++) {
+    html += renderSectionCard(doc, i, sections[i], sections.length);
+  }
+
+  // Add buttons
+  if (doc === 'waiver') {
+    html += '<div class="add-section">' +
+      '<button onclick="addSection(\'waiver\',\'p\')">+ Paragraph</button>' +
+      '<button onclick="addSection(\'waiver\',\'indent\')">+ Indented Block</button>' +
+      '<button onclick="addSection(\'waiver\',\'sig\')">+ Signature</button>' +
+    '</div>';
+  } else {
+    html += '<div class="add-section">' +
+      '<button onclick="addSection(\'policy\',\'h1\')">+ Section Heading</button>' +
+      '<button onclick="addSection(\'policy\',\'h2\')">+ Sub-Heading</button>' +
+      '<button onclick="addSection(\'policy\',\'p\')">+ Paragraph</button>' +
+      '<button onclick="addSection(\'policy\',\'ul\')">+ Bullet List</button>' +
+      '<button onclick="addSection(\'policy\',\'ol\')">+ Numbered List</button>' +
+      '<button onclick="addSection(\'policy\',\'sig\')">+ Signature</button>' +
+    '</div>';
+  }
+
+  container.innerHTML = html;
 }
 
-function renderListEditor(doc, sectionIdx, section) {
-  var html = '<div class="list-items">';
+function buildSectionCard(labelText, badgeText, badgeClass, bodyHTML) {
+  return '<div class="section-card">' +
+    '<div class="section-label">' +
+      '<div><span class="label-badge ' + badgeClass + '">' + badgeText + '</span> <span class="label-text">' + labelText + '</span></div>' +
+    '</div>' +
+    bodyHTML +
+  '</div>';
+}
+
+function renderSectionCard(doc, idx, section, total) {
+  var typeName = { p: 'Paragraph', indent: 'Indented Block', h1: 'Section Heading', h2: 'Sub-Heading', ul: 'Bullet List', ol: 'Numbered List', sig: 'Signature' };
+  var badgeClass = { p: 'badge-paragraph', indent: 'badge-indent', h1: 'badge-heading', h2: 'badge-heading', ul: 'badge-list', ol: 'badge-list', sig: 'badge-sig' };
+
+  var actions = '<div class="section-actions">' +
+    (idx > 0 ? '<button title="Move up" onclick="moveSection(\'' + doc + '\',' + idx + ',-1)">&#9650;</button>' : '') +
+    (idx < total - 1 ? '<button title="Move down" onclick="moveSection(\'' + doc + '\',' + idx + ',1)">&#9660;</button>' : '') +
+    '<button title="Delete" onclick="deleteSection(\'' + doc + '\',' + idx + ')">&#10005;</button>' +
+  '</div>';
+
+  var bodyHTML = '';
+  if (section.type === 'p' || section.type === 'indent') {
+    bodyHTML = '<div class="content-area" contenteditable="true" data-doc="' + doc + '" data-idx="' + idx + '" data-field="html" oninput="markUnsaved()">' + (section.html || '') + '</div>';
+  } else if (section.type === 'h1' || section.type === 'h2') {
+    bodyHTML = '<div class="content-area heading-content" contenteditable="true" data-doc="' + doc + '" data-idx="' + idx + '" data-field="text" oninput="markUnsaved()">' + (section.text || '') + '</div>';
+  } else if (section.type === 'ul' || section.type === 'ol') {
+    bodyHTML = renderListEditorHTML(doc, idx, section);
+  } else if (section.type === 'sig') {
+    bodyHTML = '<div class="sig-preview">Signature fields: ' + section.lines.map(function(row) {
+      return row.map(function(f) { return f.label; }).join(', ');
+    }).join(' | ') + '</div>';
+  }
+
+  return '<div class="section-card">' +
+    '<div class="section-label">' +
+      '<div><span class="label-badge ' + (badgeClass[section.type] || 'badge-paragraph') + '">' + section.type.toUpperCase() + '</span> <span class="label-text">' + (typeName[section.type] || section.type) + ' #' + (idx + 1) + '</span></div>' +
+      actions +
+    '</div>' +
+    bodyHTML +
+  '</div>';
+}
+
+function renderListEditorHTML(doc, sectionIdx, section) {
+  var html = '<div class="list-content">';
   var items = section.items || [];
   for (var j = 0; j < items.length; j++) {
     var marker = section.type === 'ol' ? (j + 1) + '.' : '\u2022';
-    html += '<div class="list-item">' +
-      '<span class="item-num">' + marker + '</span>' +
-      '<textarea rows="2" oninput="updateListItem(\'' + doc + '\',' + sectionIdx + ',' + j + ',this.value)">' + escapeHTML(items[j].html || '') + '</textarea>' +
+    html += '<div class="list-item-row">' +
+      '<span class="marker">' + marker + '</span>' +
+      '<div class="item-content" contenteditable="true" data-doc="' + doc + '" data-section="' + sectionIdx + '" data-item="' + j + '" oninput="markUnsaved()">' + (items[j].html || '') + '</div>' +
       '<button title="Remove" onclick="removeListItem(\'' + doc + '\',' + sectionIdx + ',' + j + ')">&#10005;</button>' +
     '</div>';
   }
-  html += '</div>';
   html += '<button class="add-item-btn" onclick="addListItem(\'' + doc + '\',' + sectionIdx + ')">+ Add Item</button>';
+  html += '</div>';
   return html;
 }
 
+/* ── Sync contenteditable back to data ── */
+function syncFromEditor() {
+  // Meta fields
+  var el;
+  el = document.querySelector('[data-field="waiver.title"]');
+  if (el) content.waiver.title = el.innerHTML.split(/<br\s*\/?>/i).filter(function(l) { return l.trim(); });
+  el = document.querySelector('[data-field="waiver.warning"]');
+  if (el) content.waiver.warning = el.innerHTML;
+  el = document.querySelector('[data-field="policy.title"]');
+  if (el) content.policy.title = el.textContent;
+  el = document.querySelector('[data-field="policy.intro"]');
+  if (el) content.policy.intro = el.innerHTML;
+
+  // Section content areas
+  document.querySelectorAll('.content-area[data-doc]').forEach(function(area) {
+    var doc = area.dataset.doc;
+    var idx = parseInt(area.dataset.idx);
+    var field = area.dataset.field;
+    content[doc].sections[idx][field] = area.innerHTML;
+  });
+
+  // List items
+  document.querySelectorAll('.item-content[data-doc]').forEach(function(item) {
+    var doc = item.dataset.doc;
+    var sectionIdx = parseInt(item.dataset.section);
+    var itemIdx = parseInt(item.dataset.item);
+    content[doc].sections[sectionIdx].items[itemIdx].html = item.innerHTML;
+  });
+}
+
 /* ── Section CRUD ── */
-function updateSection(doc, idx, field, value) {
-  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
-  sections[idx][field] = value;
-  markUnsaved();
-}
-
-function updateListItem(doc, sectionIdx, itemIdx, value) {
-  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
-  sections[sectionIdx].items[itemIdx].html = value;
-  markUnsaved();
-}
-
-function addListItem(doc, sectionIdx) {
-  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
-  sections[sectionIdx].items.push({ html: '' });
-  renderSectionList(doc);
-  markUnsaved();
-}
-
-function removeListItem(doc, sectionIdx, itemIdx) {
-  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
-  sections[sectionIdx].items.splice(itemIdx, 1);
-  renderSectionList(doc);
-  markUnsaved();
-}
-
 function addSection(doc, type) {
-  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
+  syncFromEditor();
+  var sections = content[doc].sections;
   var newSection = { type: type };
   if (type === 'p' || type === 'indent') newSection.html = '';
   else if (type === 'h1' || type === 'h2') newSection.text = '';
   else if (type === 'ul' || type === 'ol') newSection.items = [{ html: '' }];
   else if (type === 'sig') newSection.lines = [[{ label: 'Signature', flex: 2 }, { label: 'Date', flex: 1 }]];
   sections.push(newSection);
-  renderSectionList(doc);
+  renderDocEditor(doc);
   markUnsaved();
 }
 
 function deleteSection(doc, idx) {
   if (!confirm('Delete this section?')) return;
-  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
-  sections.splice(idx, 1);
-  renderSectionList(doc);
+  syncFromEditor();
+  content[doc].sections.splice(idx, 1);
+  renderDocEditor(doc);
   markUnsaved();
 }
 
 function moveSection(doc, idx, dir) {
-  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
+  syncFromEditor();
+  var sections = content[doc].sections;
   var newIdx = idx + dir;
   if (newIdx < 0 || newIdx >= sections.length) return;
   var temp = sections[idx];
   sections[idx] = sections[newIdx];
   sections[newIdx] = temp;
-  renderSectionList(doc);
+  renderDocEditor(doc);
+  markUnsaved();
+}
+
+function addListItem(doc, sectionIdx) {
+  syncFromEditor();
+  content[doc].sections[sectionIdx].items.push({ html: '' });
+  renderDocEditor(doc);
+  markUnsaved();
+}
+
+function removeListItem(doc, sectionIdx, itemIdx) {
+  syncFromEditor();
+  content[doc].sections[sectionIdx].items.splice(itemIdx, 1);
+  renderDocEditor(doc);
   markUnsaved();
 }
 
 /* ── Save ── */
 async function saveContent() {
-  // Sync meta fields back to content object
-  content.waiver.title = document.getElementById('waiverTitle').value.split('\n').filter(function(l) { return l.trim(); });
-  content.waiver.warning = document.getElementById('waiverWarning').value;
-  content.policy.title = document.getElementById('policyTitle').value;
-  content.policy.intro = document.getElementById('policyIntro').value;
-
+  syncFromEditor();
   var btn = document.getElementById('saveBtn');
   btn.disabled = true;
   btn.textContent = 'Saving...';
@@ -457,25 +787,14 @@ async function saveContent() {
   try {
     var resp = await fetch('/api/content', {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + TOKEN
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
       body: JSON.stringify(content)
     });
-    if (resp.status === 401) {
-      showToast('Session expired. Please log in again.');
-      doLogout();
-      return;
-    }
-    if (!resp.ok) {
-      var err = await resp.json();
-      showToast('Save failed: ' + (err.error || 'Unknown error'));
-      return;
-    }
+    if (resp.status === 401) { showToast('Session expired. Please log in again.'); doLogout(); return; }
+    if (!resp.ok) { var err = await resp.json(); showToast('Save failed: ' + (err.error || 'Unknown error')); return; }
     hasUnsaved = false;
     updateSaveStatus();
-    showToast('Saved successfully!');
+    showToast('Saved!');
   } catch (e) {
     showToast('Network error. Check your connection.');
   } finally {
@@ -484,46 +803,28 @@ async function saveContent() {
   }
 }
 
-/* ── Unsaved tracking ── */
-function markUnsaved() {
-  hasUnsaved = true;
-  updateSaveStatus();
-}
-
+/* ── Status ── */
+function markUnsaved() { hasUnsaved = true; updateSaveStatus(); }
 function updateSaveStatus() {
   var el = document.getElementById('saveStatus');
-  if (hasUnsaved) {
-    el.textContent = 'Unsaved changes';
-    el.className = 'save-status unsaved';
-  } else {
-    el.textContent = 'All changes saved';
-    el.className = 'save-status';
-  }
+  if (hasUnsaved) { el.textContent = 'Unsaved changes'; el.className = 'save-status unsaved'; }
+  else { el.textContent = 'All changes saved'; el.className = 'save-status'; }
 }
 
 /* ── Preview ── */
 function buildPreviewGyms() {
   var sel = document.getElementById('previewGym');
-  sel.innerHTML = GYMS.map(function(g, i) {
-    return '<option value="' + i + '">' + g.name + '</option>';
-  }).join('');
+  sel.innerHTML = GYMS.map(function(g, i) { return '<option value="' + i + '">' + g.name + '</option>'; }).join('');
 }
 
 function openPreview() {
-  // Sync meta before preview
-  content.waiver.title = document.getElementById('waiverTitle').value.split('\n').filter(function(l) { return l.trim(); });
-  content.waiver.warning = document.getElementById('waiverWarning').value;
-  content.policy.title = document.getElementById('policyTitle').value;
-  content.policy.intro = document.getElementById('policyIntro').value;
-
+  syncFromEditor();
   document.getElementById('previewDoc').value = activeTab;
   document.getElementById('previewModal').classList.add('open');
   renderPreview();
 }
 
-function closePreview() {
-  document.getElementById('previewModal').classList.remove('open');
-}
+function closePreview() { document.getElementById('previewModal').classList.remove('open'); }
 
 function substituteVars(text, gym) {
   if (!text) return text;
@@ -533,17 +834,15 @@ function substituteVars(text, gym) {
 }
 
 function renderPreview() {
-  var gymIdx = document.getElementById('previewGym').value;
+  var gym = GYMS[document.getElementById('previewGym').value];
   var docType = document.getElementById('previewDoc').value;
-  var gym = GYMS[gymIdx];
   var body = document.getElementById('previewBody');
 
   if (docType === 'waiver') {
     var w = content.waiver;
     var title = w.title.map(function(t) { return substituteVars(t, gym); }).join('<br>');
-    var warning = substituteVars(w.warning, gym);
     var html = '<h1>' + title + '</h1>';
-    html += '<div class="warning">' + warning + '</div>';
+    html += '<div class="warning">' + substituteVars(w.warning, gym) + '</div>';
     html += renderSectionsPreview(w.sections, gym);
     body.innerHTML = html;
   } else {
@@ -568,11 +867,7 @@ function renderSectionsPreview(sections, gym) {
         html += '<ul>';
         for (var j = 0; j < (s.items || []).length; j++) {
           html += '<li>' + substituteVars(s.items[j].html, gym);
-          if (s.items[j].sub) {
-            html += '<ul>';
-            for (var k = 0; k < s.items[j].sub.length; k++) html += '<li>' + substituteVars(s.items[j].sub[k], gym) + '</li>';
-            html += '</ul>';
-          }
+          if (s.items[j].sub) { html += '<ul>'; for (var k = 0; k < s.items[j].sub.length; k++) html += '<li>' + substituteVars(s.items[j].sub[k], gym) + '</li>'; html += '</ul>'; }
           html += '</li>';
         }
         html += '</ul>'; break;
@@ -583,9 +878,7 @@ function renderSectionsPreview(sections, gym) {
       case 'sig':
         for (var ri = 0; ri < s.lines.length; ri++) {
           html += '<div class="sig-area">';
-          for (var fi = 0; fi < s.lines[ri].length; fi++) {
-            html += '<div style="flex:' + s.lines[ri][fi].flex + ';"><div class="sig-line"></div><div class="sig-label">' + s.lines[ri][fi].label + '</div></div>';
-          }
+          for (var fi = 0; fi < s.lines[ri].length; fi++) html += '<div style="flex:' + s.lines[ri][fi].flex + ';"><div class="sig-line"></div><div class="sig-label">' + s.lines[ri][fi].label + '</div></div>';
           html += '</div>';
         }
         break;
@@ -595,16 +888,8 @@ function renderSectionsPreview(sections, gym) {
 }
 
 /* ── Helpers ── */
-function escapeHTML(text) {
-  var div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
 function copyVar(text) {
-  navigator.clipboard.writeText(text).then(function() {
-    showToast('Copied: ' + text);
-  });
+  navigator.clipboard.writeText(text).then(function() { showToast('Copied: ' + text); });
 }
 
 function showToast(msg) {
@@ -615,23 +900,11 @@ function showToast(msg) {
 }
 
 /* ── Keyboard ── */
-document.getElementById('pinInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') doLogin();
-});
+document.getElementById('pinInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+window.addEventListener('beforeunload', function(e) { if (hasUnsaved) { e.preventDefault(); e.returnValue = ''; } });
 
-window.addEventListener('beforeunload', function(e) {
-  if (hasUnsaved) {
-    e.preventDefault();
-    e.returnValue = '';
-  }
-});
-
-/* ── Auto-login if token exists ── */
-if (TOKEN) {
-  initEditor().catch(function() {
-    doLogout();
-  });
-}
+/* ── Auto-login ── */
+if (TOKEN) { initEditor().catch(function() { doLogout(); }); }
 </script>
 </body>
 </html>
