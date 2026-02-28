@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waiver Hub Admin</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+/* ── Login Screen ── */
+#loginScreen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.login-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,.08); padding: 40px; width: 360px; text-align: center; }
+.login-card h1 { font-size: 22px; margin-bottom: 6px; }
+.login-card p { font-size: 14px; color: #666; margin-bottom: 24px; }
+.login-card input { width: 100%; padding: 12px 16px; font-size: 18px; letter-spacing: 8px; text-align: center; border: 2px solid #ddd; border-radius: 8px; outline: none; transition: border-color .2s; }
+.login-card input:focus { border-color: #4361ee; }
+.login-card button { width: 100%; margin-top: 16px; padding: 12px; font-size: 15px; font-weight: 600; color: #fff; background: #4361ee; border: none; border-radius: 8px; cursor: pointer; transition: background .2s; }
+.login-card button:hover { background: #3a56d4; }
+.login-error { color: #e74c3c; font-size: 13px; margin-top: 12px; display: none; }
+
+/* ── Editor Screen ── */
+#editorScreen { display: none; max-width: 960px; margin: 0 auto; padding: 20px; }
+.editor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.editor-header h1 { font-size: 20px; }
+.editor-header .actions { display: flex; gap: 8px; }
+.btn { padding: 8px 18px; font-size: 13px; font-weight: 600; border: none; border-radius: 6px; cursor: pointer; transition: all .2s; }
+.btn-primary { background: #4361ee; color: #fff; }
+.btn-primary:hover { background: #3a56d4; }
+.btn-secondary { background: #e9ecef; color: #333; }
+.btn-secondary:hover { background: #dde1e6; }
+.btn-danger { background: #e74c3c; color: #fff; }
+.btn-danger:hover { background: #c0392b; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── Tabs ── */
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+.tab { padding: 10px 20px; font-size: 14px; font-weight: 600; background: #e9ecef; border: none; border-radius: 8px 8px 0 0; cursor: pointer; color: #555; transition: all .2s; }
+.tab.active { background: #fff; color: #4361ee; box-shadow: 0 -2px 0 #4361ee inset; }
+
+/* ── Variable Reference ── */
+.var-ref { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.var-ref h3 { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.var-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.var-tag { display: inline-flex; align-items: center; gap: 6px; background: #f0f4ff; border: 1px solid #d0d8f0; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; transition: background .15s; }
+.var-tag:hover { background: #dce4ff; }
+.var-tag code { font-family: 'SF Mono', 'Fira Code', monospace; font-weight: 600; color: #4361ee; }
+.var-tag span { color: #666; }
+
+/* ── Section Cards ── */
+.section-list { display: flex; flex-direction: column; gap: 10px; }
+.section-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden; }
+.section-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #f8f9fa; border-bottom: 1px solid #eee; }
+.section-type { font-size: 11px; font-weight: 700; color: #fff; background: #6c757d; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+.section-type.h1 { background: #4361ee; }
+.section-type.h2 { background: #7c3aed; }
+.section-type.p { background: #0ea5e9; }
+.section-type.ul { background: #10b981; }
+.section-type.ol { background: #f59e0b; }
+.section-type.sig { background: #6b7280; }
+.section-type.indent { background: #ec4899; }
+.section-actions { margin-left: auto; display: flex; gap: 4px; }
+.section-actions button { background: none; border: none; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 14px; color: #888; transition: all .15s; }
+.section-actions button:hover { background: #eee; color: #333; }
+.section-body { padding: 12px 14px; }
+.section-body textarea { width: 100%; min-height: 60px; padding: 8px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; line-height: 1.5; border: 1px solid #ddd; border-radius: 6px; resize: vertical; outline: none; transition: border-color .2s; }
+.section-body textarea:focus { border-color: #4361ee; }
+
+/* ── List Item Editor ── */
+.list-items { display: flex; flex-direction: column; gap: 6px; }
+.list-item { display: flex; gap: 6px; align-items: flex-start; }
+.list-item textarea { flex: 1; min-height: 40px; padding: 6px 8px; font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; line-height: 1.4; border: 1px solid #ddd; border-radius: 4px; resize: vertical; outline: none; }
+.list-item textarea:focus { border-color: #4361ee; }
+.list-item .item-num { font-size: 12px; color: #888; padding-top: 8px; min-width: 18px; text-align: right; }
+.list-item button { background: none; border: none; cursor: pointer; color: #ccc; padding: 6px; font-size: 14px; }
+.list-item button:hover { color: #e74c3c; }
+.add-item-btn { font-size: 12px; color: #4361ee; background: none; border: 1px dashed #4361ee; border-radius: 4px; padding: 4px 10px; cursor: pointer; margin-top: 4px; transition: all .15s; }
+.add-item-btn:hover { background: #f0f4ff; }
+
+/* ── Sig Editor ── */
+.sig-preview { font-size: 12px; color: #888; padding: 8px; background: #f8f9fa; border-radius: 4px; }
+
+/* ── Add Section ── */
+.add-section { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.add-section button { font-size: 12px; padding: 4px 10px; border-radius: 4px; border: 1px dashed #aaa; background: #fff; cursor: pointer; color: #555; transition: all .15s; }
+.add-section button:hover { border-color: #4361ee; color: #4361ee; background: #f0f4ff; }
+
+/* ── Meta Fields (title, warning, intro) ── */
+.meta-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.06); padding: 14px; margin-bottom: 12px; }
+.meta-card label { display: block; font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; margin-bottom: 6px; }
+.meta-card textarea { width: 100%; padding: 8px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; line-height: 1.5; border: 1px solid #ddd; border-radius: 6px; resize: vertical; outline: none; }
+.meta-card textarea:focus { border-color: #4361ee; }
+
+/* ── Preview ── */
+#previewModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: center; justify-content: center; }
+#previewModal.open { display: flex; }
+.preview-container { background: #fff; border-radius: 12px; width: 90%; max-width: 800px; max-height: 90vh; overflow: auto; padding: 0; }
+.preview-toolbar { position: sticky; top: 0; background: #fff; padding: 12px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px; z-index: 1; }
+.preview-toolbar select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+.preview-toolbar .close-btn { margin-left: auto; background: none; border: none; font-size: 20px; cursor: pointer; color: #888; padding: 4px 8px; }
+.preview-toolbar .close-btn:hover { color: #333; }
+.preview-body { padding: 30px; }
+.preview-body h1 { font-size: 14px; text-align: center; margin: 16px 0 8px; color: #333; }
+.preview-body h2 { font-size: 13px; margin: 14px 0 6px; }
+.preview-body p { font-size: 12px; line-height: 1.6; margin-bottom: 8px; }
+.preview-body ul, .preview-body ol { font-size: 12px; line-height: 1.6; margin: 0 0 8px 20px; }
+.preview-body .warning { background: #fff3cd; border: 1px solid #ffc107; padding: 8px 12px; font-size: 11px; font-weight: 700; text-align: center; border-radius: 4px; margin-bottom: 12px; }
+.preview-body .policy-intro { background: #f0f4ff; border: 1px solid #b8c9ff; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; text-align: center; }
+.preview-body .sig-area { display: flex; gap: 10px; margin-top: 16px; }
+.preview-body .sig-line { border-bottom: 1px solid #000; height: 20px; }
+.preview-body .sig-label { font-size: 10px; color: #666; margin-top: 2px; }
+
+/* ── Toast ── */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #333; color: #fff; padding: 10px 24px; border-radius: 8px; font-size: 14px; transition: transform .3s; z-index: 2000; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── Save Status ── */
+.save-status { font-size: 12px; color: #888; display: flex; align-items: center; gap: 4px; }
+.save-status.unsaved { color: #e74c3c; }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  #editorScreen { padding: 12px; }
+  .editor-header { flex-direction: column; gap: 10px; }
+  .tabs { overflow-x: auto; }
+  .preview-container { width: 98%; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ LOGIN SCREEN ═══════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <h1>Waiver Hub Admin</h1>
+    <p>Enter your PIN to continue</p>
+    <input type="password" id="pinInput" maxlength="8" inputmode="numeric" placeholder="PIN" autocomplete="off">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ═══════════ EDITOR SCREEN ═══════════ -->
+<div id="editorScreen">
+  <div class="editor-header">
+    <h1>Content Editor</h1>
+    <div class="actions">
+      <span class="save-status" id="saveStatus">All changes saved</span>
+      <button class="btn btn-secondary" onclick="openPreview()">Preview</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveContent()">Save Changes</button>
+      <button class="btn btn-secondary" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Variable Reference -->
+  <div class="var-ref">
+    <h3>Available Variables</h3>
+    <div class="var-tags">
+      <div class="var-tag" onclick="copyVar('{{gym.name}}')"><code>{{gym.name}}</code> <span>Gym name</span></div>
+      <div class="var-tag" onclick="copyVar('{{gym.fee}}')"><code>{{gym.fee}}</code> <span>Annual fee ($)</span></div>
+      <div class="var-tag" onclick="copyVar('{{gym.domain}}')"><code>{{gym.domain}}</code> <span>Email domain</span></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" id="tabWaiver" onclick="switchTab('waiver')">Release & Waiver</button>
+    <button class="tab" id="tabPolicy" onclick="switchTab('policy')">Policies & Procedures</button>
+  </div>
+
+  <!-- Waiver Editor -->
+  <div id="waiverEditor">
+    <div class="meta-card">
+      <label>Title (one line per row)</label>
+      <textarea id="waiverTitle" rows="2" oninput="markUnsaved()"></textarea>
+    </div>
+    <div class="meta-card">
+      <label>Warning Box Text</label>
+      <textarea id="waiverWarning" rows="2" oninput="markUnsaved()"></textarea>
+    </div>
+    <div class="section-list" id="waiverSections"></div>
+    <div class="add-section">
+      <button onclick="addSection('waiver','p')">+ Paragraph</button>
+      <button onclick="addSection('waiver','indent')">+ Indented</button>
+      <button onclick="addSection('waiver','sig')">+ Signature</button>
+    </div>
+  </div>
+
+  <!-- Policy Editor -->
+  <div id="policyEditor" style="display:none;">
+    <div class="meta-card">
+      <label>Title</label>
+      <textarea id="policyTitle" rows="1" oninput="markUnsaved()"></textarea>
+    </div>
+    <div class="meta-card">
+      <label>Intro Text (HTML, use variables)</label>
+      <textarea id="policyIntro" rows="2" oninput="markUnsaved()"></textarea>
+    </div>
+    <div class="section-list" id="policySections"></div>
+    <div class="add-section">
+      <button onclick="addSection('policy','h1')">+ H1</button>
+      <button onclick="addSection('policy','h2')">+ H2</button>
+      <button onclick="addSection('policy','p')">+ Paragraph</button>
+      <button onclick="addSection('policy','ul')">+ Bullet List</button>
+      <button onclick="addSection('policy','ol')">+ Numbered List</button>
+      <button onclick="addSection('policy','sig')">+ Signature</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PREVIEW MODAL ═══════════ -->
+<div id="previewModal" onclick="if(event.target===this)closePreview()">
+  <div class="preview-container">
+    <div class="preview-toolbar">
+      <label>Preview as:</label>
+      <select id="previewGym" onchange="renderPreview()"></select>
+      <select id="previewDoc" onchange="renderPreview()">
+        <option value="waiver">Release & Waiver</option>
+        <option value="policy">Policies & Procedures</option>
+      </select>
+      <button class="close-btn" onclick="closePreview()">&times;</button>
+    </div>
+    <div class="preview-body" id="previewBody"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   ADMIN EDITOR
+   ═══════════════════════════════════════════════ */
+
+var TOKEN = localStorage.getItem('admin_token') || null;
+var content = null; // loaded from API
+var activeTab = 'waiver';
+var hasUnsaved = false;
+
+/* Sample gyms for preview (same as main site) */
+var GYMS = [
+  { name: 'Powers Gymnastics Cedar Park', abbr: 'PGCP', fee: 55, domain: 'powersgym.com', color: '#1a3a6b' },
+  { name: 'Powers Gymnastics Round Rock', abbr: 'PGRR', fee: 55, domain: 'powersgym.com', color: '#1a3a6b' },
+  { name: 'Powers Gymnastics San Antonio', abbr: 'PGSA', fee: 55, domain: 'powersgym.com', color: '#1a3a6b' },
+  { name: 'Powers Gymnastics Georgetown', abbr: 'PGGT', fee: 55, domain: 'powersgym.com', color: '#1a3a6b' },
+  { name: 'Reach Gymnastics', abbr: 'REACH', fee: 55, domain: 'reachgym.com', color: '#dc2626' },
+  { name: 'Flips Gymnastics', abbr: 'FLIPS', fee: 55, domain: 'flipsgym.com', color: '#ea580c' },
+  { name: 'Infinity Gymnastics', abbr: 'INF', fee: 55, domain: 'infinitygym.com', color: '#7c3aed' },
+  { name: 'TopFlight Gymnastics', abbr: 'TFG', fee: 55, domain: 'topflightgym.com', color: '#0ea5e9' },
+  { name: 'Texas Dreams Gymnastics', abbr: 'TDG', fee: 55, domain: 'texasdreamsgym.com', color: '#15803d' },
+  { name: 'OAS Gymnastics', abbr: 'OAS', fee: 55, domain: 'oasgym.com', color: '#4338ca' }
+];
+
+/* ── Auth ── */
+async function doLogin() {
+  var pin = document.getElementById('pinInput').value;
+  if (!pin) return;
+  var errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+
+  try {
+    var resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: pin })
+    });
+    var data = await resp.json();
+    if (!resp.ok) {
+      errEl.textContent = data.error || 'Login failed';
+      errEl.style.display = 'block';
+      return;
+    }
+    TOKEN = data.token;
+    localStorage.setItem('admin_token', TOKEN);
+    await initEditor();
+  } catch (e) {
+    errEl.textContent = 'Connection error. Make sure you are on the deployed site.';
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  TOKEN = null;
+  localStorage.removeItem('admin_token');
+  document.getElementById('editorScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('pinInput').value = '';
+}
+
+/* ── Init ── */
+async function initEditor() {
+  try {
+    var resp = await fetch('/api/content');
+    if (!resp.ok) throw new Error('Content not found');
+    content = await resp.json();
+  } catch (e) {
+    showToast('Could not load content. Run /api/seed first.');
+    return;
+  }
+
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('editorScreen').style.display = 'block';
+  populateEditor();
+  buildPreviewGyms();
+}
+
+/* ── Tab Switching ── */
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tabWaiver').classList.toggle('active', tab === 'waiver');
+  document.getElementById('tabPolicy').classList.toggle('active', tab === 'policy');
+  document.getElementById('waiverEditor').style.display = tab === 'waiver' ? '' : 'none';
+  document.getElementById('policyEditor').style.display = tab === 'policy' ? '' : 'none';
+}
+
+/* ── Populate Editor from content ── */
+function populateEditor() {
+  // Waiver meta
+  document.getElementById('waiverTitle').value = content.waiver.title.join('\n');
+  document.getElementById('waiverWarning').value = content.waiver.warning;
+  renderSectionList('waiver');
+
+  // Policy meta
+  document.getElementById('policyTitle').value = content.policy.title;
+  document.getElementById('policyIntro').value = content.policy.intro;
+  renderSectionList('policy');
+
+  hasUnsaved = false;
+  updateSaveStatus();
+}
+
+/* ── Render Section List ── */
+function renderSectionList(doc) {
+  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
+  var container = document.getElementById(doc + 'Sections');
+  container.innerHTML = '';
+
+  for (var i = 0; i < sections.length; i++) {
+    var s = sections[i];
+    var card = document.createElement('div');
+    card.className = 'section-card';
+
+    var header = '<div class="section-header">' +
+      '<span class="section-type ' + s.type + '">' + s.type + '</span>' +
+      '<span style="font-size:12px;color:#aaa;">#' + (i + 1) + '</span>' +
+      '<div class="section-actions">' +
+        (i > 0 ? '<button title="Move up" onclick="moveSection(\'' + doc + '\',' + i + ',-1)">&#9650;</button>' : '') +
+        (i < sections.length - 1 ? '<button title="Move down" onclick="moveSection(\'' + doc + '\',' + i + ',1)">&#9660;</button>' : '') +
+        '<button title="Delete" onclick="deleteSection(\'' + doc + '\',' + i + ')">&#10005;</button>' +
+      '</div></div>';
+
+    var body = '<div class="section-body">';
+    if (s.type === 'p' || s.type === 'indent') {
+      body += '<textarea rows="3" oninput="updateSection(\'' + doc + '\',' + i + ',\'html\',this.value)">' + escapeHTML(s.html || '') + '</textarea>';
+    } else if (s.type === 'h1' || s.type === 'h2') {
+      body += '<textarea rows="1" oninput="updateSection(\'' + doc + '\',' + i + ',\'text\',this.value)">' + escapeHTML(s.text || '') + '</textarea>';
+    } else if (s.type === 'ul' || s.type === 'ol') {
+      body += renderListEditor(doc, i, s);
+    } else if (s.type === 'sig') {
+      body += '<div class="sig-preview">Signature fields: ' + s.lines.map(function(row) {
+        return row.map(function(f) { return f.label; }).join(', ');
+      }).join(' | ') + '</div>';
+    }
+    body += '</div>';
+
+    card.innerHTML = header + body;
+    container.appendChild(card);
+  }
+}
+
+function renderListEditor(doc, sectionIdx, section) {
+  var html = '<div class="list-items">';
+  var items = section.items || [];
+  for (var j = 0; j < items.length; j++) {
+    var marker = section.type === 'ol' ? (j + 1) + '.' : '\u2022';
+    html += '<div class="list-item">' +
+      '<span class="item-num">' + marker + '</span>' +
+      '<textarea rows="2" oninput="updateListItem(\'' + doc + '\',' + sectionIdx + ',' + j + ',this.value)">' + escapeHTML(items[j].html || '') + '</textarea>' +
+      '<button title="Remove" onclick="removeListItem(\'' + doc + '\',' + sectionIdx + ',' + j + ')">&#10005;</button>' +
+    '</div>';
+  }
+  html += '</div>';
+  html += '<button class="add-item-btn" onclick="addListItem(\'' + doc + '\',' + sectionIdx + ')">+ Add Item</button>';
+  return html;
+}
+
+/* ── Section CRUD ── */
+function updateSection(doc, idx, field, value) {
+  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
+  sections[idx][field] = value;
+  markUnsaved();
+}
+
+function updateListItem(doc, sectionIdx, itemIdx, value) {
+  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
+  sections[sectionIdx].items[itemIdx].html = value;
+  markUnsaved();
+}
+
+function addListItem(doc, sectionIdx) {
+  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
+  sections[sectionIdx].items.push({ html: '' });
+  renderSectionList(doc);
+  markUnsaved();
+}
+
+function removeListItem(doc, sectionIdx, itemIdx) {
+  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
+  sections[sectionIdx].items.splice(itemIdx, 1);
+  renderSectionList(doc);
+  markUnsaved();
+}
+
+function addSection(doc, type) {
+  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
+  var newSection = { type: type };
+  if (type === 'p' || type === 'indent') newSection.html = '';
+  else if (type === 'h1' || type === 'h2') newSection.text = '';
+  else if (type === 'ul' || type === 'ol') newSection.items = [{ html: '' }];
+  else if (type === 'sig') newSection.lines = [[{ label: 'Signature', flex: 2 }, { label: 'Date', flex: 1 }]];
+  sections.push(newSection);
+  renderSectionList(doc);
+  markUnsaved();
+}
+
+function deleteSection(doc, idx) {
+  if (!confirm('Delete this section?')) return;
+  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
+  sections.splice(idx, 1);
+  renderSectionList(doc);
+  markUnsaved();
+}
+
+function moveSection(doc, idx, dir) {
+  var sections = doc === 'waiver' ? content.waiver.sections : content.policy.sections;
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= sections.length) return;
+  var temp = sections[idx];
+  sections[idx] = sections[newIdx];
+  sections[newIdx] = temp;
+  renderSectionList(doc);
+  markUnsaved();
+}
+
+/* ── Save ── */
+async function saveContent() {
+  // Sync meta fields back to content object
+  content.waiver.title = document.getElementById('waiverTitle').value.split('\n').filter(function(l) { return l.trim(); });
+  content.waiver.warning = document.getElementById('waiverWarning').value;
+  content.policy.title = document.getElementById('policyTitle').value;
+  content.policy.intro = document.getElementById('policyIntro').value;
+
+  var btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    var resp = await fetch('/api/content', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + TOKEN
+      },
+      body: JSON.stringify(content)
+    });
+    if (resp.status === 401) {
+      showToast('Session expired. Please log in again.');
+      doLogout();
+      return;
+    }
+    if (!resp.ok) {
+      var err = await resp.json();
+      showToast('Save failed: ' + (err.error || 'Unknown error'));
+      return;
+    }
+    hasUnsaved = false;
+    updateSaveStatus();
+    showToast('Saved successfully!');
+  } catch (e) {
+    showToast('Network error. Check your connection.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+  }
+}
+
+/* ── Unsaved tracking ── */
+function markUnsaved() {
+  hasUnsaved = true;
+  updateSaveStatus();
+}
+
+function updateSaveStatus() {
+  var el = document.getElementById('saveStatus');
+  if (hasUnsaved) {
+    el.textContent = 'Unsaved changes';
+    el.className = 'save-status unsaved';
+  } else {
+    el.textContent = 'All changes saved';
+    el.className = 'save-status';
+  }
+}
+
+/* ── Preview ── */
+function buildPreviewGyms() {
+  var sel = document.getElementById('previewGym');
+  sel.innerHTML = GYMS.map(function(g, i) {
+    return '<option value="' + i + '">' + g.name + '</option>';
+  }).join('');
+}
+
+function openPreview() {
+  // Sync meta before preview
+  content.waiver.title = document.getElementById('waiverTitle').value.split('\n').filter(function(l) { return l.trim(); });
+  content.waiver.warning = document.getElementById('waiverWarning').value;
+  content.policy.title = document.getElementById('policyTitle').value;
+  content.policy.intro = document.getElementById('policyIntro').value;
+
+  document.getElementById('previewDoc').value = activeTab;
+  document.getElementById('previewModal').classList.add('open');
+  renderPreview();
+}
+
+function closePreview() {
+  document.getElementById('previewModal').classList.remove('open');
+}
+
+function substituteVars(text, gym) {
+  if (!text) return text;
+  return text.replace(/\{\{gym\.name\}\}/g, gym.name)
+             .replace(/\{\{gym\.fee\}\}/g, String(gym.fee))
+             .replace(/\{\{gym\.domain\}\}/g, gym.domain);
+}
+
+function renderPreview() {
+  var gymIdx = document.getElementById('previewGym').value;
+  var docType = document.getElementById('previewDoc').value;
+  var gym = GYMS[gymIdx];
+  var body = document.getElementById('previewBody');
+
+  if (docType === 'waiver') {
+    var w = content.waiver;
+    var title = w.title.map(function(t) { return substituteVars(t, gym); }).join('<br>');
+    var warning = substituteVars(w.warning, gym);
+    var html = '<h1>' + title + '</h1>';
+    html += '<div class="warning">' + warning + '</div>';
+    html += renderSectionsPreview(w.sections, gym);
+    body.innerHTML = html;
+  } else {
+    var p = content.policy;
+    var html = '<h1>' + p.title + '</h1>';
+    html += '<div class="policy-intro">' + substituteVars(p.intro, gym) + '</div>';
+    html += renderSectionsPreview(p.sections, gym);
+    body.innerHTML = html;
+  }
+}
+
+function renderSectionsPreview(sections, gym) {
+  var html = '';
+  for (var i = 0; i < sections.length; i++) {
+    var s = sections[i];
+    switch (s.type) {
+      case 'h1': html += '<h1>' + substituteVars(s.text, gym) + '</h1>'; break;
+      case 'h2': html += '<h2>' + substituteVars(s.text, gym) + '</h2>'; break;
+      case 'p': html += '<p>' + substituteVars(s.html || '', gym) + '</p>'; break;
+      case 'indent': html += '<p style="padding-left:20px;">' + substituteVars(s.html, gym) + '</p>'; break;
+      case 'ul':
+        html += '<ul>';
+        for (var j = 0; j < (s.items || []).length; j++) {
+          html += '<li>' + substituteVars(s.items[j].html, gym);
+          if (s.items[j].sub) {
+            html += '<ul>';
+            for (var k = 0; k < s.items[j].sub.length; k++) html += '<li>' + substituteVars(s.items[j].sub[k], gym) + '</li>';
+            html += '</ul>';
+          }
+          html += '</li>';
+        }
+        html += '</ul>'; break;
+      case 'ol':
+        html += '<ol>';
+        for (var j = 0; j < (s.items || []).length; j++) html += '<li>' + substituteVars(s.items[j].html, gym) + '</li>';
+        html += '</ol>'; break;
+      case 'sig':
+        for (var ri = 0; ri < s.lines.length; ri++) {
+          html += '<div class="sig-area">';
+          for (var fi = 0; fi < s.lines[ri].length; fi++) {
+            html += '<div style="flex:' + s.lines[ri][fi].flex + ';"><div class="sig-line"></div><div class="sig-label">' + s.lines[ri][fi].label + '</div></div>';
+          }
+          html += '</div>';
+        }
+        break;
+    }
+  }
+  return html;
+}
+
+/* ── Helpers ── */
+function escapeHTML(text) {
+  var div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function copyVar(text) {
+  navigator.clipboard.writeText(text).then(function() {
+    showToast('Copied: ' + text);
+  });
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+/* ── Keyboard ── */
+document.getElementById('pinInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doLogin();
+});
+
+window.addEventListener('beforeunload', function(e) {
+  if (hasUnsaved) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+/* ── Auto-login if token exists ── */
+if (TOKEN) {
+  initEditor().catch(function() {
+    doLogout();
+  });
+}
+</script>
+</body>
+</html>

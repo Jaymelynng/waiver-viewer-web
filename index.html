@@ -445,7 +445,7 @@
       background: linear-gradient(160deg, #f5f0f0 0%, #ede8e8 100%);
       border-radius: 18px;
       width: 100%;
-      max-width: 540px;
+      max-width: 620px;
       max-height: 88vh;
       display: flex;
       flex-direction: column;
@@ -549,46 +549,115 @@
       color: #1f2937;
     }
     .bulk-toggle-opt input { display: none; }
-    .bulk-gym-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+    /* ── BULK GYM GRID ── */
+    .bulk-gym-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
     }
-    .bulk-gym-row {
+    .bulk-gym-card {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 14px;
+      gap: 10px;
+      padding: 10px 12px;
       background: white;
       border: 2px solid #e5e7eb;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+      user-select: none;
     }
-    .bulk-gym-row:hover { border-color: #b48f8f; background: #fdf9f9; }
-    .bulk-gym-row.checked { border-color: #b48f8f; background: #f5eded; }
-    .bulk-gym-row .gym-color-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
+    .bulk-gym-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: var(--gym-color);
+      border-radius: 12px 0 0 12px;
+      transition: width 0.2s;
+    }
+    .bulk-gym-card:hover { border-color: #b48f8f; background: #fdf9f9; }
+    .bulk-gym-card:hover::before { width: 6px; }
+    .bulk-gym-card.checked { border-color: #b48f8f; background: #f5eded; }
+    .bulk-gym-card.checked::before { width: 6px; }
+    .bulk-gym-card .bulk-logo-wrap {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: #f0eded;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      border: 1px solid rgba(0,0,0,0.06);
     }
-    .bulk-gym-row .gym-row-name {
-      font-size: 13px;
+    .bulk-gym-card .bulk-logo-wrap img {
+      max-width: 30px; max-height: 30px;
+      object-fit: contain;
+    }
+    .bulk-gym-card .bulk-gym-name {
+      font-size: 12.5px;
       font-weight: 600;
       color: #1f2937;
-      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1.3;
     }
-    .bulk-gym-row .gym-row-abbr {
-      font-size: 11px;
+    .bulk-gym-card .bulk-gym-abbr {
+      font-size: 10px;
       color: #9ca3af;
-      font-weight: 500;
+      font-weight: 600;
+      display: block;
+      margin-top: 1px;
     }
-    .bulk-gym-checkbox {
-      width: 17px; height: 17px;
+    .bulk-gym-card .bulk-gym-checkbox {
+      width: 18px; height: 18px;
       accent-color: #b48f8f;
       cursor: pointer;
       flex-shrink: 0;
     }
+    .bulk-gym-card .check-badge {
+      position: absolute;
+      top: 6px; left: 30px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #b48f8f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .bulk-gym-card .check-badge svg {
+      width: 8px; height: 8px;
+      stroke: white; stroke-width: 3; fill: none;
+    }
+    .bulk-gym-card.checked .check-badge { opacity: 1; transform: scale(1); }
+    .bulk-selected-count {
+      font-size: 12px; font-weight: 600; color: #6b7280;
+      margin-bottom: 10px;
+    }
+    .bulk-selected-count strong { color: #b48f8f; }
+    .bulk-info-note {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #f0eded;
+      border: 1px solid #e0d6d6;
+      border-radius: 8px;
+      margin-top: 14px;
+      font-size: 11.5px;
+      color: #6b7280;
+      line-height: 1.4;
+    }
+    .bulk-info-note svg { flex-shrink: 0; color: #b48f8f; }
 
     /* ── BULK PROGRESS ── */
     .bulk-progress-area {
@@ -658,6 +727,18 @@
       box-shadow: none;
       cursor: not-allowed;
       transform: none;
+    }
+
+    /* ── BULK MODAL MOBILE ── */
+    @media (max-width: 480px) {
+      .bulk-modal { max-width: 100%; max-height: 100vh; border-radius: 0; height: 100%; }
+      .bulk-modal-overlay { padding: 0; }
+      .bulk-gym-grid { grid-template-columns: 1fr !important; }
+      .bulk-doc-toggle { flex-direction: column; align-items: stretch; }
+      .bulk-toggle-opt { justify-content: center; }
+      .bulk-modal-header { padding: 16px 16px 12px; }
+      .bulk-modal-body { padding: 16px; }
+      .bulk-modal-footer { padding: 12px 16px; }
     }
 
     /* ── OFF-SCREEN RENDER ──
@@ -744,7 +825,7 @@
   <div style="width:120px;"></div>
   <div class="header-content">
     <h1>Waiver Hub</h1>
-    <div class="subtitle">View, download, or bulk export gym waivers and policies as PDF</div>
+    <div class="subtitle">Release & Waiver · Policies & Procedures</div>
     <button class="bulk-dl-btn" id="bulkDlBtn" onclick="openBulkModal()" style="margin-top:12px;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Bulk Download
@@ -781,14 +862,19 @@
         <label class="bulk-toggle-opt"><input type="radio" name="bulkDocType" value="policy"> Policy Only</label>
         <label class="bulk-toggle-opt"><input type="radio" name="bulkDocType" value="both"> Both</label>
       </div>
-      <div class="bulk-section-label" style="margin-top:16px;">
+      <div class="bulk-section-label" style="margin-top:16px;justify-content:space-between;">
         Select Gyms
         <span class="bulk-select-controls">
           <button class="bulk-link-btn" onclick="bulkSelectAll(true)">Select All</button>
           <button class="bulk-link-btn" onclick="bulkSelectAll(false)">Deselect All</button>
         </span>
       </div>
-      <div class="bulk-gym-list" id="bulkGymList"></div>
+      <div class="bulk-selected-count" id="bulkSelectedCount"><strong>10</strong> of 10 selected</div>
+      <div class="bulk-gym-grid" id="bulkGymList"></div>
+      <div class="bulk-info-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        Each PDF includes your gym's logo, brand colors, and signature fields.
+      </div>
     </div>
     <div class="bulk-progress-area" id="bulkProgressArea" style="display:none;">
       <div class="bulk-progress-label" id="bulkProgressLabel">Preparing...</div>
@@ -800,7 +886,7 @@
       <button class="bulk-cancel-btn" onclick="closeBulkModal()">Cancel</button>
       <button class="bulk-download-btn" id="bulkDownloadBtn" onclick="startBulkDownload()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download ZIP
+        <span id="bulkBtnLabel">Download ZIP</span>
       </button>
     </div>
   </div>
@@ -872,7 +958,7 @@ function selectGym(idx) {
         <div class="badge-sub">${gym.abbr} &bull; ${gym.email}</div>
       </div>
     </div>
-    <button class="dl-btn primary" onclick="window.print()" title="Print — choose Save as PDF to download">
+    <button class="dl-btn primary" onclick="downloadSinglePDF()" title="Download PDF">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Download PDF
     </button>
@@ -926,8 +1012,97 @@ function renderDoc() {
   }
 }
 
+/* ═══════════════ CONTENT API ═══════════════ */
+var CONTENT = null;
+
+function substituteVars(text, gym) {
+  if (!text) return text;
+  return text.replace(/\{\{gym\.name\}\}/g, gym.name)
+             .replace(/\{\{gym\.fee\}\}/g, String(gym.fee))
+             .replace(/\{\{gym\.domain\}\}/g, gym.domain);
+}
+
+function substituteSection(section, gym) {
+  var clone = { type: section.type };
+  if (section.html !== undefined) clone.html = substituteVars(section.html, gym);
+  if (section.text !== undefined) clone.text = substituteVars(section.text, gym);
+  if (section.items) {
+    clone.items = section.items.map(function(item) {
+      var ic = {};
+      if (item.html !== undefined) ic.html = substituteVars(item.html, gym);
+      if (item.sub) ic.sub = item.sub.map(function(s) { return substituteVars(s, gym); });
+      return ic;
+    });
+  }
+  if (section.lines) clone.lines = section.lines;
+  return clone;
+}
+
+function renderSectionsHTML(sections) {
+  var html = '';
+  for (var i = 0; i < sections.length; i++) {
+    var s = sections[i];
+    switch (s.type) {
+      case 'h1': html += '<h1>' + s.text + '</h1>'; break;
+      case 'h2': html += '<h2>' + s.text + '</h2>'; break;
+      case 'p':
+        html += '<p>' + (s.html || '') + '</p>'; break;
+      case 'indent':
+        html += '<p class="indent">' + s.html + '</p>'; break;
+      case 'ul':
+        html += '<ul>';
+        for (var ui = 0; ui < s.items.length; ui++) {
+          html += '<li>' + s.items[ui].html;
+          if (s.items[ui].sub) {
+            html += '<ul>';
+            for (var si = 0; si < s.items[ui].sub.length; si++) html += '<li>' + s.items[ui].sub[si] + '</li>';
+            html += '</ul>';
+          }
+          html += '</li>';
+        }
+        html += '</ul>'; break;
+      case 'ol':
+        html += '<ol>';
+        for (var oi = 0; oi < s.items.length; oi++) html += '<li>' + s.items[oi].html + '</li>';
+        html += '</ol>'; break;
+      case 'sig':
+        for (var ri = 0; ri < s.lines.length; ri++) {
+          var row = s.lines[ri];
+          html += '<div class="sig-area"' + (ri > 0 ? ' style="margin-top:8px;"' : '') + '>';
+          for (var fi = 0; fi < row.length; fi++) {
+            html += '<div style="flex:' + row[fi].flex + ';"><div class="sig-line">&nbsp;</div><div class="sig-label">' + row[fi].label + '</div></div>';
+          }
+          html += '</div>';
+        }
+        break;
+    }
+  }
+  return html;
+}
+
+async function loadContent() {
+  try {
+    var resp = await fetch('/api/content');
+    if (resp.ok) {
+      CONTENT = await resp.json();
+    }
+  } catch (e) {
+    /* API unavailable — hardcoded fallback used */
+  }
+}
+
 /* ═══════════════ WAIVER HTML ═══════════════ */
 function getWaiverHTML(gym) {
+  if (CONTENT && CONTENT.waiver) {
+    var w = CONTENT.waiver;
+    var title = w.title.map(function(t) { return substituteVars(t, gym); }).join('<br>');
+    var warning = substituteVars(w.warning, gym);
+    var sections = w.sections.map(function(s) { return substituteSection(s, gym); });
+    return '<div class="branded-header" style="background:' + gym.color + ';"><img src="' + gym.logo + '" onerror="this.style.display=\'none\'"><div class="header-name">' + gym.name + '</div></div>' +
+      '<h1' + (gym.abbr === 'OAS' ? ' style="color:#3e266b !important"' : '') + '>' + title + '</h1>' +
+      '<div class="warning">' + warning + '</div>' +
+      renderSectionsHTML(sections);
+  }
   return `
 <div class="branded-header" style="background:${gym.color};">
   <img src="${gym.logo}" onerror="this.style.display='none'">
@@ -960,6 +1135,15 @@ function getWaiverHTML(gym) {
 
 /* ═══════════════ POLICY HTML ═══════════════ */
 function getPolicyHTML(gym) {
+  if (CONTENT && CONTENT.policy) {
+    var p = CONTENT.policy;
+    var intro = substituteVars(p.intro, gym);
+    var sections = p.sections.map(function(s) { return substituteSection(s, gym); });
+    return '<div class="branded-header" style="background:' + gym.color + ';"><img src="' + gym.logo + '" onerror="this.style.display=\'none\'"><div class="header-name">' + gym.name + '</div></div>' +
+      '<h1>' + p.title + '</h1>' +
+      '<div class="policy-intro"><p style="margin:0;">' + intro + '</p></div>' +
+      renderSectionsHTML(sections);
+  }
   return `
 <div class="branded-header" style="background:${gym.color};">
   <img src="${gym.logo}" onerror="this.style.display='none'">
@@ -1192,6 +1376,7 @@ function showToast(msg) {
 
 /* ═══════════════ INIT ═══════════════ */
 buildGrid();
+loadContent();
 </script>
 
 <!-- CDN Libraries for Bulk Download -->
@@ -1230,26 +1415,52 @@ function resetBulkDownloadBtn() {
   const btn = document.getElementById('bulkDownloadBtn');
   btn.innerHTML = `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Download ZIP
+    <span id="bulkBtnLabel">Download ZIP</span>
   `;
+  updateBulkSelectedCount();
 }
 
 function buildBulkGymList() {
   const list = document.getElementById('bulkGymList');
   list.innerHTML = GYMS.map((g, i) => `
-    <label class="bulk-gym-row checked" id="bulkGymRow_${i}">
-      <div class="gym-color-dot" style="background:${g.color}"></div>
-      <div class="gym-row-name">${g.name}</div>
-      <span class="gym-row-abbr">${g.abbr}</span>
+    <label class="bulk-gym-card checked" id="bulkGymRow_${i}" style="--gym-color:${g.color}">
+      <div class="bulk-logo-wrap">
+        <img src="${g.logo}" onerror="this.parentElement.innerHTML='<div style=\\'font-size:14px;font-weight:800;color:${g.color}\\'>${g.abbr}</div>'">
+      </div>
+      <div class="check-badge">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div class="bulk-gym-name">${g.name}</div>
+        <span class="bulk-gym-abbr">${g.abbr}</span>
+      </div>
       <input type="checkbox" class="bulk-gym-checkbox" id="bulkCheck_${i}" checked onchange="updateBulkRowStyle(${i})">
     </label>
   `).join('');
+  updateBulkSelectedCount();
 }
 
 function updateBulkRowStyle(i) {
   const cb = document.getElementById('bulkCheck_' + i);
   const row = document.getElementById('bulkGymRow_' + i);
   row.classList.toggle('checked', cb.checked);
+  updateBulkSelectedCount();
+}
+
+function updateBulkSelectedCount() {
+  var total = GYMS.length;
+  var selected = 0;
+  GYMS.forEach(function(_, i) {
+    if (document.getElementById('bulkCheck_' + i).checked) selected++;
+  });
+  document.getElementById('bulkSelectedCount').innerHTML =
+    '<strong>' + selected + '</strong> of ' + total + ' selected';
+  var label = document.getElementById('bulkBtnLabel');
+  if (label) {
+    label.textContent = selected > 0
+      ? 'Download ZIP (' + selected + ' gym' + (selected !== 1 ? 's' : '') + ')'
+      : 'Download ZIP';
+  }
 }
 
 function bulkSelectAll(checked) {
@@ -1257,6 +1468,7 @@ function bulkSelectAll(checked) {
     document.getElementById('bulkCheck_' + i).checked = checked;
     document.getElementById('bulkGymRow_' + i).classList.toggle('checked', checked);
   });
+  updateBulkSelectedCount();
 }
 
 /* ── Progress Bar ── */
@@ -1458,20 +1670,23 @@ async function buildWaiverPDF(gym, logoDataURL) {
   pdf.setFillColor(col.r, col.g, col.b);
   pdf.rect(MG_L, y, CW, hdrH, 'F');
 
-  /* Logo — centered vertically in header */
+  /* Logo + gym name — centered horizontally in header */
   var logoSize = 40;
-  var logoY = y + (hdrH - logoSize) / 2;
-  if (logoDataURL) {
-    try { pdf.addImage(logoDataURL, 'PNG', MG_L + 12, logoY, logoSize, logoSize); } catch(e) {}
-  }
-
-  /* Gym name — centered vertically in header */
+  var logoGap = 12;
   pdf.setFontSize(FS_HEADER);
   pdf.setFont('times', 'bold');
   pdf.setTextColor(255, 255, 255);
-  var nameX = logoDataURL ? MG_L + 12 + logoSize + 12 : MG_L + 12;
+  var nameW = pdf.getTextWidth(gym.name);
+  var groupW = logoDataURL ? logoSize + logoGap + nameW : nameW;
+  var groupX = MG_L + (CW - groupW) / 2;
+  var logoY = y + (hdrH - logoSize) / 2;
   var nameY = y + (hdrH / 2) + (FS_HEADER * 0.35);
-  pdf.text(gym.name, nameX, nameY);
+  if (logoDataURL) {
+    try { pdf.addImage(logoDataURL, 'PNG', groupX, logoY, logoSize, logoSize); } catch(e) {}
+    pdf.text(gym.name, groupX + logoSize + logoGap, nameY);
+  } else {
+    pdf.text(gym.name, groupX, nameY);
+  }
 
   y += hdrH + 10;
 
@@ -1479,17 +1694,17 @@ async function buildWaiverPDF(gym, logoDataURL) {
   pdf.setTextColor(h1Col.r, h1Col.g, h1Col.b);
   pdf.setFontSize(FS_H1);
   pdf.setFont('times', 'bold');
-  var h1Line1 = 'RELEASE OF LIABILITY, WAIVER OF CLAIMS, ASSUMPTION OF RISK,';
-  var h1Line2 = 'INDEMNITY, MEDICAL CERTIFICATION, AND CONSENT TO MEDICAL TREATMENT AGREEMENT';
+  var h1Line1 = (CONTENT && CONTENT.waiver) ? CONTENT.waiver.title[0] : 'RELEASE OF LIABILITY, WAIVER OF CLAIMS, ASSUMPTION OF RISK,';
+  var h1Line2 = (CONTENT && CONTENT.waiver) ? CONTENT.waiver.title[1] : 'INDEMNITY, MEDICAL CERTIFICATION, AND CONSENT TO MEDICAL TREATMENT AGREEMENT';
   var w1 = pdf.getTextWidth(h1Line1);
   pdf.text(h1Line1, MG_L + (CW - w1)/2, y);
-  y += FS_H1 + 3;
+  y += FS_H1 + 1;
   var w2 = pdf.getTextWidth(h1Line2);
   pdf.text(h1Line2, MG_L + (CW - w2)/2, y);
-  y += FS_H1 + 6;
+  y += FS_H1 + 4;
 
   /* ── WARNING BOX ── */
-  var warnText = 'BY SIGNING THIS AGREEMENT, YOU WILL WAIVE CERTAIN LEGAL RIGHTS, INCLUDING THE RIGHT TO SUE. PLEASE READ CAREFULLY!';
+  var warnText = (CONTENT && CONTENT.waiver) ? CONTENT.waiver.warning : 'BY SIGNING THIS AGREEMENT, YOU WILL WAIVE CERTAIN LEGAL RIGHTS, INCLUDING THE RIGHT TO SUE. PLEASE READ CAREFULLY!';
   pdf.setFontSize(FS_WARNING);
   pdf.setFont('times', 'bold');
   var warnLines = pdf.splitTextToSize(warnText, CW - 24);
@@ -1503,7 +1718,7 @@ async function buildWaiverPDF(gym, logoDataURL) {
     var wlw = pdf.getTextWidth(warnLines[wi]);
     pdf.text(warnLines[wi], MG_L + (CW - wlw)/2, y + 5 + FS_WARNING + wi * warnLineH);
   }
-  y += warnBoxH + 6;
+  y += warnBoxH + 10;
 
   /* ── BODY PARAGRAPHS ── */
   pdf.setTextColor(0, 0, 0);
@@ -1571,6 +1786,9 @@ async function buildWaiverPDF(gym, logoDataURL) {
 
 /* Get waiver content as structured paragraphs (text only, no HTML rendering) */
 function getWaiverParagraphs(gym) {
+  if (CONTENT && CONTENT.waiver) {
+    return CONTENT.waiver.sections.map(function(s) { return substituteSection(s, gym); });
+  }
   return [
     { type: 'p', html: 'I, the enrolled participant and/or the parent/guardian of the participant, desire to participate in gymnastics, cheer, dance, or ninja lessons, gymnastics, cheer, dance, or ninja classes, camps, parties, and/or other gym-related activities (\u201CActivities\u201D) offered by <strong>' + gym.name + '</strong> (\u201CCompany\u201D) and, in consideration for being permitted by the Company to participate in the Activities, agree to all the terms and conditions set forth in this agreement (\u201CAgreement\u201D).' },
     { type: 'p', html: '<strong>ASSUMPTION OF RISK. I UNDERSTAND THAT GYMNASTICS INVOLVES HIGH-IMPACT, HIGH-VELOCITY ACTIVITIES AND EQUIPMENT, INCLUDING BUT NOT LIMITED TO BALANCE BEAMS, BARS, FOAM PITS, TRAMPOLINES, AND VAULTING BOARDS. I AM AWARE THAT THESE ACTIVITIES INVOLVE THE RISK OF SERIOUS INJURY, DISABILITY, DEATH, PROPERTY DAMAGE, AND INFECTION BY COMMUNICABLE DISEASE (INCLUDING, WITHOUT LIMITATION, COVID-19, HEPATITIS A, B AND C, AND INFLUENZA, AMONG OTHERS).</strong>' },
@@ -1586,6 +1804,7 @@ function getWaiverParagraphs(gym) {
       [{ label: 'Parent/Guardian Signature', flex: 2 }, { label: 'Date', flex: 1 }]
     ]}
   ];
+  }
 }
 
 /* ══════ POLICY PDF BUILDER ══════ */
@@ -1607,29 +1826,35 @@ async function buildPolicyPDF(gym, logoDataURL) {
   var hdrH = 48;
   pdf.setFillColor(col.r, col.g, col.b);
   pdf.rect(MG_L, y, CW, hdrH, 'F');
+  /* Logo + gym name — centered horizontally in header */
   var pLogoSize = 38;
-  var pLogoY = y + (hdrH - pLogoSize) / 2;
-  if (logoDataURL) {
-    try { pdf.addImage(logoDataURL, 'PNG', MG_L + 12, pLogoY, pLogoSize, pLogoSize); } catch(e) {}
-  }
+  var pLogoGap = 12;
   pdf.setFontSize(FS_HEADER);
   pdf.setFont('times', 'bold');
   pdf.setTextColor(255, 255, 255);
-  var nameX = logoDataURL ? MG_L + 12 + pLogoSize + 12 : MG_L + 12;
+  var pNameW = pdf.getTextWidth(gym.name);
+  var pGroupW = logoDataURL ? pLogoSize + pLogoGap + pNameW : pNameW;
+  var pGroupX = MG_L + (CW - pGroupW) / 2;
+  var pLogoY = y + (hdrH - pLogoSize) / 2;
   var nameY = y + (hdrH / 2) + (FS_HEADER * 0.35);
-  pdf.text(gym.name, nameX, nameY);
+  if (logoDataURL) {
+    try { pdf.addImage(logoDataURL, 'PNG', pGroupX, pLogoY, pLogoSize, pLogoSize); } catch(e) {}
+    pdf.text(gym.name, pGroupX + pLogoSize + pLogoGap, nameY);
+  } else {
+    pdf.text(gym.name, pGroupX, nameY);
+  }
   y += hdrH + 14;
 
   /* ── H1: POLICIES AND PROCEDURES ── */
   pdf.setTextColor(h1Col.r, h1Col.g, h1Col.b);
   pdf.setFontSize(FS_H1);
   pdf.setFont('times', 'bold');
-  var h1t = 'POLICIES AND PROCEDURES';
+  var h1t = (CONTENT && CONTENT.policy) ? CONTENT.policy.title : 'POLICIES AND PROCEDURES';
   pdf.text(h1t, MG_L + (CW - pdf.getTextWidth(h1t))/2, y);
   y += FS_H1 + 8;
 
   /* ── Policy Intro Box ── */
-  var introText = 'At ' + gym.name + ', we are dedicated to providing a world-class gymnastics and athletic experience. We continuously invest in state-of-the-art facilities, equipment, and comprehensive coach training.';
+  var introText = (CONTENT && CONTENT.policy) ? substituteVars(CONTENT.policy.intro, gym).replace(/<[^>]+>/g, '') : 'At ' + gym.name + ', we are dedicated to providing a world-class gymnastics and athletic experience. We continuously invest in state-of-the-art facilities, equipment, and comprehensive coach training.';
   pdf.setFontSize(FS_BODY + 1);
   pdf.setFont('times', 'normal');
   var introLines = pdf.splitTextToSize(introText, CW - 24);
@@ -1753,6 +1978,9 @@ async function buildPolicyPDF(gym, logoDataURL) {
 
 /* Get policy content as structured array */
 function getPolicyContent(gym) {
+  if (CONTENT && CONTENT.policy) {
+    return CONTENT.policy.sections.map(function(s) { return substituteSection(s, gym); });
+  }
   return [
     { type: 'h2', text: 'Additional Guidelines:' },
     { type: 'ul', items: [
@@ -1917,6 +2145,7 @@ function getPolicyContent(gym) {
       [{ label: 'Printed Name', flex: 1 }]
     ]}
   ];
+  }
 }
 
 /* ── Generate a single PDF for one gym + doc type ── */
@@ -1932,6 +2161,24 @@ async function generateGymPDF(gym, docType) {
   }
 
   return pdf.output('arraybuffer');
+}
+
+/* ── Single PDF Download (uses jsPDF, consistent across all devices) ── */
+async function downloadSinglePDF() {
+  if (typeof window.jspdf === 'undefined') {
+    showToast('PDF library not loaded. Check internet connection.');
+    return;
+  }
+  var gym = GYMS[currentGym];
+  var logoDataURL = await loadImageAsDataURL(gym.logo);
+  var pdf;
+  if (currentDoc === 'waiver') {
+    pdf = await buildWaiverPDF(gym, logoDataURL);
+  } else {
+    pdf = await buildPolicyPDF(gym, logoDataURL);
+  }
+  var docLabel = currentDoc === 'waiver' ? 'Release & Waiver' : 'Policies & Procedures';
+  pdf.save(gym.name + ' - ' + docLabel + '.pdf');
 }
 
 /* ── Main Bulk Download Orchestrator ── */
@@ -1962,7 +2209,7 @@ async function startBulkDownload() {
   // Disable UI, show progress
   const btn = document.getElementById('bulkDownloadBtn');
   btn.disabled = true;
-  btn.textContent = 'Generating...';
+  btn.innerHTML = '<span id="bulkBtnLabel">Generating...</span>';
   document.getElementById('bulkProgressArea').style.display = 'block';
   setProgress(0, 'Initializing...');
 
