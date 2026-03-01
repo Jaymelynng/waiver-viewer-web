@@ -19,8 +19,7 @@ export default async function handler(req, res) {
       // Also fetch gyms if stored
       const gyms = await kv.get('gyms');
       if (gyms) content.gyms = gyms;
-      // Cache for 60s on CDN, revalidate in background
-      res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+      res.setHeader('Cache-Control', 'no-cache');
       return res.status(200).json(content);
     } catch (e) {
       return res.status(500).json({ error: 'KV not configured. Create a KV database in Vercel dashboard.' });
