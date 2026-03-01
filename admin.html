@@ -410,10 +410,34 @@ body {
 }
 .gym-field input:focus { border-color: #b48f8f; }
 .gym-field input[type="color"] {
+  width: 40px;
+  min-width: 40px;
   height: 40px;
   padding: 4px;
   cursor: pointer;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  flex-shrink: 0;
 }
+.color-field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.color-field-row input[type="text"] {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: monospace;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: border-color .2s;
+  background: #fff;
+}
+.color-field-row input[type="text"]:focus { border-color: #b48f8f; }
 .gym-field.full-width { grid-column: 1 / -1; }
 .gym-card-actions {
   padding: 0 16px 16px;
@@ -940,9 +964,14 @@ function gymField(label, type, value, idx, field) {
 }
 
 function gymFieldColor(label, value, idx, field) {
+  var v = value || '#666666';
   return '<div class="gym-field">' +
     '<label>' + label + '</label>' +
-    '<input type="color" value="' + (value || '#666666') + '" oninput="updateGymColor(' + idx + ',\'' + field + '\',this.value)">' +
+    '<div class="color-field-row">' +
+      '<input type="color" value="' + v + '" oninput="updateGymColor(' + idx + ',\'' + field + '\',this.value)">' +
+      '<input type="text" value="' + v + '" maxlength="7" placeholder="#000000" ' +
+        'oninput="updateGymColorHex(' + idx + ',\'' + field + '\',this)">' +
+    '</div>' +
   '</div>';
 }
 
@@ -958,14 +987,50 @@ function updateGym(idx, field, value) {
 
 function updateGymColor(idx, field, value) {
   gyms[idx][field] = value;
-  // Update color dot preview
+  // Sync the hex text input next to this color picker
   var cards = document.querySelectorAll('.gym-card-admin');
   if (cards[idx]) {
+    var colorFields = cards[idx].querySelectorAll('.color-field-row');
+    var target = field === 'color' ? colorFields[0] : colorFields[1];
+    if (target) {
+      var textInput = target.querySelector('input[type="text"]');
+      if (textInput) textInput.value = value;
+    }
+    // Update color dot preview
     var dots = cards[idx].querySelectorAll('.color-dot');
     if (field === 'color' && dots[0]) dots[0].style.background = value;
     if (field === 'color2' && dots[1]) dots[1].style.background = value;
   }
   markUnsaved();
+}
+
+function updateGymColorHex(idx, field, input) {
+  var val = input.value.trim();
+  // Auto-add # if they forgot it
+  if (val.length > 0 && val[0] !== '#') val = '#' + val;
+  // Only apply if it's a valid hex color
+  if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+    input.style.borderColor = '#e5e7eb';
+    gyms[idx][field] = val;
+    // Sync the color picker swatch
+    var cards = document.querySelectorAll('.gym-card-admin');
+    if (cards[idx]) {
+      var colorFields = cards[idx].querySelectorAll('.color-field-row');
+      var target = field === 'color' ? colorFields[0] : colorFields[1];
+      if (target) {
+        var colorInput = target.querySelector('input[type="color"]');
+        if (colorInput) colorInput.value = val;
+      }
+      // Update color dot preview
+      var dots = cards[idx].querySelectorAll('.color-dot');
+      if (field === 'color' && dots[0]) dots[0].style.background = val;
+      if (field === 'color2' && dots[1]) dots[1].style.background = val;
+    }
+    markUnsaved();
+  } else if (val.length >= 4) {
+    // Show invalid state while typing
+    input.style.borderColor = '#ef4444';
+  }
 }
 
 function addGym() {
