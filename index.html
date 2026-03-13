@@ -239,18 +239,23 @@
     .starchart-card:hover .landing-arrow { color: #1f53a3; }
 
     /* ── STAR CHART: Page container override ── */
+    /* When viewer is in star chart mode, blow it out to full width */
+    .viewer.sc-viewer {
+      max-width: 1340px !important;
+    }
     .page.sc-mode {
       background: var(--sc-c3, #d8d8d8) !important;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
       font-size: 16px !important;
       line-height: 1.6 !important;
       color: #111 !important;
-      padding: 40px !important;
-      max-height: 80vh !important;
-      overflow-y: auto !important;
+      padding: 40px 20px !important;
+      max-height: none !important;
+      overflow-y: visible !important;
       overflow-x: hidden !important;
-      border-radius: 12px !important;
+      border-radius: 0 !important;
       box-shadow: none !important;
+      border: none !important;
     }
 
     /* ── STAR CHART STYLES — match prototype exactly ── */
@@ -1391,6 +1396,7 @@ function selectGym(idx) {
   document.getElementById('bulkDlBtn').classList.add('hidden');
 
   if (currentSection === 'starCharts') {
+    document.getElementById('viewer').classList.add('sc-viewer');
     document.getElementById('toolbar').innerHTML = `
       <div class="gym-badge">
         <img src="${gym.logo}" onerror="this.style.display='none'">
@@ -1414,6 +1420,7 @@ function selectGym(idx) {
     document.getElementById('docPage').classList.add('sc-mode');
     document.getElementById('docPage').innerHTML = renderStarchartHTML(gym, currentLevel);
   } else {
+    document.getElementById('viewer').classList.remove('sc-viewer');
     document.getElementById('docPage').classList.remove('sc-mode');
     // Waiver Hub viewer (existing)
     document.getElementById('toolbar').innerHTML = `
