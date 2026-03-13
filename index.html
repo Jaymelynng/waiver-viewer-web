@@ -334,6 +334,7 @@
       font-weight: bold; color: #fff; background: var(--sc-c2);
       padding: 8px 12px; border-radius: 6px; display: inline-block;
       margin-top: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); letter-spacing: 0.5px;
+      white-space: nowrap;
     }
     .sc-panel-b .sc-star-final { background: var(--sc-c1); }
     .sc-footer {
@@ -1405,6 +1406,10 @@ function selectGym(idx) {
           <div class="badge-sub">${gym.abbr} &bull; Star Charts</div>
         </div>
       </div>
+      <button class="dl-btn primary" onclick="downloadStarchartPDF()" title="Download Star Chart PDF">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download PDF
+      </button>
     `;
     // Level selector tabs
     const levelKeys = Object.keys(STARCHART_LEVELS);
@@ -1940,6 +1945,7 @@ loadContent();
 <!-- CDN Libraries for Bulk Download -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
 /* ═══════════════════════════════════════════════════════
@@ -2717,6 +2723,68 @@ async function generateGymPDF(gym, docType) {
   }
 
   return pdf.output('arraybuffer');
+}
+
+/* ── Star Chart PDF Download (html2canvas → jsPDF) ── */
+async function downloadStarchartPDF() {
+  const container = document.querySelector('#docPage .sc-container');
+  if (!container) { showToast('No star chart to download.'); return; }
+
+  const btn = document.querySelector('.dl-btn.primary');
+  if (btn) { btn.disabled = true; btn.innerHTML = 'Generating...'; }
+
+  try {
+    // Temporarily expand the page container so html2canvas captures the full chart without scroll clipping
+    const docPage = document.getElementById('docPage');
+    const origMaxH = docPage.style.maxHeight;
+    const origOverflow = docPage.style.overflow;
+    docPage.style.maxHeight = 'none';
+    docPage.style.overflow = 'visible';
+
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: null,
+      logging: false,
+      windowWidth: 1300
+    });
+
+    // Restore scroll container
+    docPage.style.maxHeight = origMaxH;
+    docPage.style.overflow = origOverflow;
+
+    const imgData = canvas.toDataURL('image/png');
+    const imgW = canvas.width;
+    const imgH = canvas.height;
+
+    // Fit to PDF page (landscape if wider than tall, portrait otherwise)
+    const { jsPDF } = window.jspdf;
+    const landscape = imgW > imgH;
+    const pdf = new jsPDF({ orientation: landscape ? 'landscape' : 'portrait', unit: 'pt', format: 'letter' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    const availW = pageW - margin * 2;
+    const availH = pageH - margin * 2;
+    const ratio = Math.min(availW / imgW, availH / imgH);
+    const drawW = imgW * ratio;
+    const drawH = imgH * ratio;
+    const x = (pageW - drawW) / 2;
+    const y = (pageH - drawH) / 2;
+
+    pdf.addImage(imgData, 'PNG', x, y, drawW, drawH);
+
+    const gym = GYMS[currentGym];
+    const levelLabels = { preschool: 'Preschool', junior: 'Junior', level1: 'Level 1', level2: 'Level 2', level3: 'Level 3' };
+    const levelName = levelLabels[currentLevel] || currentLevel;
+    pdf.save(gym.name + ' - ' + levelName + ' Star Chart.pdf');
+    showToast('PDF downloaded!');
+  } catch (e) {
+    console.error('Star chart PDF error:', e);
+    showToast('PDF generation failed. Try again.');
+  }
+
+  if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PDF'; }
 }
 
 /* ── Single PDF Download (uses jsPDF, consistent across all devices) ── */
