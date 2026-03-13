@@ -286,7 +286,7 @@
     .sc-header-text { grid-column: 2; text-align: center; }
     .sc-header h1 { margin: 0; font-size: 2.8em; text-transform: uppercase; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); color: #fff !important; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; }
     .sc-header h2 { margin: 5px 0 0; font-weight: 600; color: var(--sc-c3); font-size: 1.5em; }
-    .sc-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 35px; }
+    .sc-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 35px; }
     .sc-info-card {
       background: linear-gradient(180deg, #f4f4f4 0%, var(--sc-c3) 100%);
       padding: 25px; border-radius: 12px; border: 1px solid #c0c0c0;
@@ -301,7 +301,7 @@
       margin-bottom: 40px; box-shadow: 0 8px 16px rgba(0,0,0,0.3);
       font-size: 1.1em; border: 2px solid var(--sc-c2-dark);
     }
-    .sc-events-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+    .sc-events-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 40px; }
     .sc-event-panel {
       border-radius: 14px; background: #f4f4f4;
       box-shadow: 0 12px 24px rgba(0,0,0,0.25); overflow: hidden;
