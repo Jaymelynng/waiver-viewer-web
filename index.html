@@ -238,24 +238,6 @@
     .waiver-card:hover .landing-arrow { color: #b48f8f; }
     .starchart-card:hover .landing-arrow { color: #1f53a3; }
 
-    /* ── STAR CHART MODE: override the .viewer and .page containers ── */
-    .viewer.sc-viewer { max-width: none !important; padding: 0 !important; }
-    .page.sc-mode {
-      background-color: var(--sc-c3, #d8d8d8) !important;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-      font-size: 16px !important;
-      line-height: 1.6 !important;
-      color: #111111 !important;
-      margin: 0 !important;
-      padding: 40px 20px !important;
-      max-width: none !important;
-      max-height: none !important;
-      overflow: visible !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      border: none !important;
-    }
-
     /* ══════════════════════════════════════════════════════
        STAR CHART CSS — COPIED DIRECTLY FROM JAYME'S PROTOTYPE
        starchart-prototype-level1.html
@@ -1329,6 +1311,7 @@
   <div class="viewer-toolbar" id="toolbar"></div>
   <div class="doc-tabs" id="docTabs"></div>
   <div class="page" id="docPage"></div>
+  <div id="starChartPage" style="display:none;"></div>
 </div>
 
 <!-- ====== BULK DOWNLOAD MODAL ====== -->
@@ -1612,7 +1595,11 @@ function selectGym(idx) {
   document.getElementById('bulkDlBtn').classList.add('hidden');
 
   if (currentSection === 'starCharts') {
-    document.getElementById('viewer').classList.add('sc-viewer');
+    // Star chart gets its OWN container — NOT inside the .page div
+    document.getElementById('docPage').style.display = 'none';
+    document.getElementById('starChartPage').style.display = 'block';
+    document.getElementById('viewer').style.maxWidth = 'none';
+    document.getElementById('viewer').style.padding = '0 20px 40px';
     document.getElementById('toolbar').innerHTML = `
       <div class="gym-badge">
         <img src="${gym.logo}" onerror="this.style.display='none'">
@@ -1637,12 +1624,21 @@ function selectGym(idx) {
       const active = k === currentLevel;
       return `<button class="sc-level-tab${active ? ' active' : ''}" style="--gym-color:${gym.color}${!available ? ';opacity:0.4;cursor:default' : ''}" onclick="${available ? `switchLevel('${k}')` : ''}">${levelLabels[k] || k}${!available ? ' (soon)' : ''}</button>`;
     }).join('');
-    document.getElementById('docPage').classList.add('sc-mode');
-    document.getElementById('docPage').innerHTML = renderStarchartHTML(gym, currentLevel);
+    // Render star chart into its own clean div — no .page CSS inheritance
+    document.getElementById('starChartPage').style.background = gym.color3 || '#d8d8d8';
+    document.getElementById('starChartPage').style.padding = '40px 20px';
+    document.getElementById('starChartPage').style.borderRadius = '12px';
+    document.getElementById('starChartPage').style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+    document.getElementById('starChartPage').style.fontSize = '16px';
+    document.getElementById('starChartPage').style.lineHeight = '1.6';
+    document.getElementById('starChartPage').style.color = '#111';
+    document.getElementById('starChartPage').innerHTML = renderStarchartHTML(gym, currentLevel);
   } else {
-    document.getElementById('viewer').classList.remove('sc-viewer');
-    document.getElementById('docPage').classList.remove('sc-mode');
-    // Waiver Hub viewer (existing)
+    // Waiver mode — restore normal viewer
+    document.getElementById('docPage').style.display = '';
+    document.getElementById('starChartPage').style.display = 'none';
+    document.getElementById('viewer').style.maxWidth = '';
+    document.getElementById('viewer').style.padding = '';
     document.getElementById('toolbar').innerHTML = `
       <div class="gym-badge">
         <img src="${gym.logo}" onerror="this.style.display='none'">
@@ -2942,20 +2938,13 @@ async function generateGymPDF(gym, docType) {
 
 /* ── Star Chart PDF Download (html2canvas → jsPDF) ── */
 async function downloadStarchartPDF() {
-  const container = document.querySelector('#docPage .sc-container');
+  const container = document.querySelector('#starChartPage .sc-container');
   if (!container) { showToast('No star chart to download.'); return; }
 
   const btn = document.querySelector('.dl-btn.primary');
   if (btn) { btn.disabled = true; btn.innerHTML = 'Generating...'; }
 
   try {
-    // Temporarily expand the page container so html2canvas captures the full chart without scroll clipping
-    const docPage = document.getElementById('docPage');
-    const origMaxH = docPage.style.maxHeight;
-    const origOverflow = docPage.style.overflow;
-    docPage.style.maxHeight = 'none';
-    docPage.style.overflow = 'visible';
-
     const canvas = await html2canvas(container, {
       scale: 2,
       useCORS: true,
@@ -2963,10 +2952,6 @@ async function downloadStarchartPDF() {
       logging: false,
       windowWidth: 1300
     });
-
-    // Restore scroll container
-    docPage.style.maxHeight = origMaxH;
-    docPage.style.overflow = origOverflow;
 
     const imgData = canvas.toDataURL('image/png');
     const imgW = canvas.width;
