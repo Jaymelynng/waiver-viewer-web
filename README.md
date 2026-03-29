@@ -24,6 +24,7 @@ waiver-viewer-web/
   admin.html          Admin editor — login, edit text, manage gyms, preview
   vercel.json         Vercel config (clean URLs)
   package.json        Just one dependency: @vercel/kv
+  logos/              Gym logo PNGs (500×500) — see logos/README.md
   docs/               Workspace map + verification notes (see POLICIES_WORKSPACE.md)
   api/
     content.js        GET/PUT — reads and writes waiver/policy content + gym data
@@ -100,7 +101,7 @@ These placeholders work anywhere in the waiver or policy text:
 | `{{gym.color2}}` | Secondary brand color (hex) | #bf0a30 |
 | `{{gym.color3}}` | Accent / background tint (hex) | #d8d8d8 |
 | `{{gym.color4}}` | Neutral / light surface (hex) | #ffffff |
-| `{{gym.logo}}` | Logo filename (same as in Gyms tab) | `ccp_cpf logo - 500x500.png` |
+| `{{gym.logo}}` | Image URL on the site (`/logos/…`) | Admin stores e.g. `ccp_cpf logo - 500x500.png` |
 
 ---
 
@@ -163,7 +164,7 @@ Primary and secondary drive most of the default UI (header, tabs, warning/intro 
 
 ## Logo Files
 
-Logos must be in the root of this folder (same level as index.html) with these exact filenames:
+Logos belong in **`logos/`** (not the project root). URLs are served as **`/logos/<filename>`**. In Admin you can enter either the **filename only** or `logos/yourfile.png`. Use these filenames unless you change them in Admin:
 
 | Gym | Filename |
 |-----|----------|

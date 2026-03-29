@@ -917,12 +917,23 @@ let currentDoc = 'waiver';
 const WARNING_COLOR_OVERRIDES = { SGT: '#000', CRR: '#000' };
 const POLICY_INTRO_COLOR_OVERRIDES = { SGT: '#000', CRR: '#000' };
 
+/* Logo files live in /logos/ — bare filename in Admin/KV still works */
+function resolveLogoUrl(logo) {
+  if (!logo || typeof logo !== 'string') return '';
+  var s = logo.trim();
+  if (!s) return '';
+  if (/^https?:\/\//i.test(s)) return s;
+  if (s.charAt(0) === '/') return s;
+  if (s.indexOf('logos/') === 0) return '/' + s;
+  return '/logos/' + s;
+}
+
 /* ═══════════════ BUILD GYM GRID ═══════════════ */
 function buildGrid() {
   document.getElementById('gymGrid').innerHTML = GYMS.map((g, i) => `
     <div class="gym-card" style="--gym-color:${g.color}" onclick="selectGym(${i})">
       <div class="logo-wrap">
-        <img src="${g.logo}" onerror="this.parentElement.innerHTML='<div style=\\'font-size:20px;font-weight:800;color:${g.color}\\'>${g.abbr}</div>'">
+        <img src="${resolveLogoUrl(g.logo)}" onerror="this.parentElement.innerHTML='<div style=\\'font-size:20px;font-weight:800;color:${g.color}\\'>${g.abbr}</div>'">
       </div>
       <div class="gym-info">
         <h3>${g.name}</h3>
@@ -956,7 +967,7 @@ function selectGym(idx) {
   document.getElementById('viewer').style.padding = '';
   document.getElementById('toolbar').innerHTML = `
       <div class="gym-badge">
-        <img src="${gym.logo}" onerror="this.style.display='none'">
+        <img src="${resolveLogoUrl(gym.logo)}" onerror="this.style.display='none'">
         <div>
           <div class="badge-name">${gym.name}</div>
           <div class="badge-sub">${gym.abbr} &bull; ${gym.email}</div>
@@ -1028,7 +1039,7 @@ function substituteVars(text, gym) {
              .replace(/\{\{gym\.color3\}\}/g, gym.color3 || '#d8d8d8')
              .replace(/\{\{gym\.color4\}\}/g, gym.color4 || '#ffffff')
              .replace(/\{\{gym\.abbr\}\}/g, gym.abbr || '')
-             .replace(/\{\{gym\.logo\}\}/g, gym.logo || '');
+             .replace(/\{\{gym\.logo\}\}/g, resolveLogoUrl(gym.logo) || '');
 }
 
 function substituteSection(section, gym) {
@@ -1113,14 +1124,14 @@ function getWaiverHTML(gym) {
     var title = w.title.map(function(t) { return substituteVars(t, gym); }).join('<br>');
     var warning = substituteVars(w.warning, gym);
     var sections = w.sections.map(function(s) { return substituteSection(s, gym); });
-    return '<div class="branded-header" style="background:' + gym.color + ';"><img src="' + gym.logo + '" onerror="this.style.display=\'none\'"><div class="header-name">' + gym.name + '</div></div>' +
+    return '<div class="branded-header" style="background:' + gym.color + ';"><img src="' + resolveLogoUrl(gym.logo) + '" onerror="this.style.display=\'none\'"><div class="header-name">' + gym.name + '</div></div>' +
       '<h1' + (gym.abbr === 'OAS' ? ' style="color:#3e266b !important"' : '') + '>' + title + '</h1>' +
       '<div class="warning">' + warning + '</div>' +
       renderSectionsHTML(sections);
   }
   return `
 <div class="branded-header" style="background:${gym.color};">
-  <img src="${gym.logo}" onerror="this.style.display='none'">
+  <img src="${resolveLogoUrl(gym.logo)}" onerror="this.style.display='none'">
   <div class="header-name">${gym.name}</div>
 </div>
 <h1${gym.abbr==='OAS'?' style="color:#3e266b !important"':''}>RELEASE OF LIABILITY, WAIVER OF CLAIMS, ASSUMPTION OF RISK,<br>INDEMNITY, MEDICAL CERTIFICATION, AND CONSENT TO MEDICAL TREATMENT AGREEMENT</h1>
@@ -1154,14 +1165,14 @@ function getPolicyHTML(gym) {
     var p = CONTENT.policy;
     var intro = substituteVars(p.intro, gym);
     var sections = p.sections.map(function(s) { return substituteSection(s, gym); });
-    return '<div class="branded-header" style="background:' + gym.color + ';"><img src="' + gym.logo + '" onerror="this.style.display=\'none\'"><div class="header-name">' + gym.name + '</div></div>' +
+    return '<div class="branded-header" style="background:' + gym.color + ';"><img src="' + resolveLogoUrl(gym.logo) + '" onerror="this.style.display=\'none\'"><div class="header-name">' + gym.name + '</div></div>' +
       '<h1>' + p.title + '</h1>' +
       '<div class="policy-intro"><p style="margin:0;">' + intro + '</p></div>' +
       renderSectionsHTML(sections);
   }
   return `
 <div class="branded-header" style="background:${gym.color};">
-  <img src="${gym.logo}" onerror="this.style.display='none'">
+  <img src="${resolveLogoUrl(gym.logo)}" onerror="this.style.display='none'">
   <div class="header-name">${gym.name}</div>
 </div>
 <h1>POLICIES AND PROCEDURES</h1>
@@ -1446,7 +1457,7 @@ function buildBulkGymList() {
   list.innerHTML = GYMS.map((g, i) => `
     <label class="bulk-gym-card checked" id="bulkGymRow_${i}" style="--gym-color:${g.color}">
       <div class="bulk-logo-wrap">
-        <img src="${g.logo}" onerror="this.parentElement.innerHTML='<div style=\\'font-size:14px;font-weight:800;color:${g.color}\\'>${g.abbr}</div>'">
+        <img src="${resolveLogoUrl(g.logo)}" onerror="this.parentElement.innerHTML='<div style=\\'font-size:14px;font-weight:800;color:${g.color}\\'>${g.abbr}</div>'">
       </div>
       <div class="check-badge">
         <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -2170,7 +2181,7 @@ function getPolicyContent(gym) {
 /* ── Generate a single PDF for one gym + doc type ── */
 async function generateGymPDF(gym, docType) {
   /* Pre-load logo as data URL at full resolution */
-  var logoDataURL = await loadImageAsDataURL(gym.logo);
+  var logoDataURL = await loadImageAsDataURL(resolveLogoUrl(gym.logo));
 
   var pdf;
   if (docType === 'waiver') {
@@ -2189,7 +2200,7 @@ async function downloadSinglePDF() {
     return;
   }
   var gym = GYMS[currentGym];
-  var logoDataURL = await loadImageAsDataURL(gym.logo);
+  var logoDataURL = await loadImageAsDataURL(resolveLogoUrl(gym.logo));
   var pdf;
   if (currentDoc === 'waiver') {
     pdf = await buildWaiverPDF(gym, logoDataURL);

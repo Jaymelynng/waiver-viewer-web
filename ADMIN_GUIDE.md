@@ -47,7 +47,7 @@ Edit the policies document. Same card-based editor as the waiver tab.
 | `{{gym.color2}}` | Secondary hex color (e.g. "#bf0a30") |
 | `{{gym.color3}}` | Accent hex color (e.g. "#d8d8d8") |
 | `{{gym.color4}}` | Neutral / light surface hex (e.g. "#ffffff") |
-| `{{gym.logo}}` | Logo **filename only** — file must sit in the **project root** next to `index.html` (e.g. `ccp_cpf logo - 500x500.png`) |
+| `{{gym.logo}}` | Resolves to **`/logos/<file>`** on the site. In Admin, enter the **filename** (e.g. `ccp_cpf logo - 500x500.png`) or `logos/...` — the PNG must live in the **`logos/`** folder in the repo. |
 
 ---
 

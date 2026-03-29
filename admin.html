@@ -609,7 +609,7 @@ body {
         <div class="var-pill" onclick="copyVar('{{gym.color2}}')">{{gym.color2}} <span>· secondary color</span></div>
         <div class="var-pill" onclick="copyVar('{{gym.color3}}')">{{gym.color3}} <span>· accent color</span></div>
         <div class="var-pill" onclick="copyVar('{{gym.color4}}')">{{gym.color4}} <span>· neutral color</span></div>
-        <div class="var-pill" onclick="copyVar('{{gym.logo}}')">{{gym.logo}} <span>· logo file</span></div>
+        <div class="var-pill" onclick="copyVar('{{gym.logo}}')">{{gym.logo}} <span>· /logos/ file</span></div>
       </div>
     </div>
 
@@ -672,6 +672,16 @@ var DEFAULT_GYMS = [
   { name: 'Scottsdale Gymnastics',           abbr: 'SGT', color: '#c72b12', color2: '#e6e6e6', color3: '#000000', color4: '#ffffff', logo: 'sgt-logo - 500x500.png', email: 'info@scottsdalegymnastics.com', fee: '55', domain: 'scottsdalegymnastics.com' },
   { name: 'Tigar Gymnastics',                abbr: 'TIG', color: '#f57f20', color2: '#0a3651', color3: '#7fc4e0', color4: '#ffffff', logo: 'tigar--logo - 500x500.png', email: 'info@tigargym.com', fee: '55', domain: 'tigargym.com' }
 ];
+
+function resolveLogoUrl(logo) {
+  if (!logo || typeof logo !== 'string') return '';
+  var s = logo.trim();
+  if (!s) return '';
+  if (/^https?:\/\//i.test(s)) return s;
+  if (s.charAt(0) === '/') return s;
+  if (s.indexOf('logos/') === 0) return '/' + s;
+  return '/logos/' + s;
+}
 
 /* ── Auth ── */
 async function doLogin() {
@@ -935,7 +945,7 @@ function renderGymsEditor() {
     var g = gyms[i];
     html += '<div class="gym-card-admin">' +
       '<div class="gym-card-header">' +
-        (g.logo ? '<img class="gym-logo-preview" src="' + g.logo + '" onerror="this.style.display=\'none\'">' : '') +
+        (g.logo ? '<img class="gym-logo-preview" src="' + resolveLogoUrl(g.logo) + '" onerror="this.style.display=\'none\'">' : '') +
         '<span class="gym-name-label">' + (g.name || 'New Gym') + '</span>' +
         '<div class="color-dots">' +
           '<div class="color-dot" style="background:' + (g.color || '#ccc') + '" title="Primary Color"></div>' +
@@ -950,7 +960,7 @@ function renderGymsEditor() {
         gymField('Email', 'text', g.email, i, 'email') +
         gymField('Annual Fee ($)', 'text', g.fee, i, 'fee') +
         gymField('Email Domain', 'text', g.domain, i, 'domain') +
-        gymField('Logo Filename', 'text', g.logo, i, 'logo') +
+        gymField('Logo (filename or logos/…)', 'text', g.logo, i, 'logo') +
         gymFieldColor('Primary Color', g.color, i, 'color') +
         gymFieldColor('Secondary Color', g.color2, i, 'color2') +
         gymFieldColor('Accent Color', g.color3, i, 'color3') +
@@ -1114,7 +1124,7 @@ function substituteVars(text, gym) {
              .replace(/\{\{gym\.color3\}\}/g, gym.color3 || '#d8d8d8')
              .replace(/\{\{gym\.color4\}\}/g, gym.color4 || '#ffffff')
              .replace(/\{\{gym\.abbr\}\}/g, gym.abbr || '')
-             .replace(/\{\{gym\.logo\}\}/g, gym.logo || '');
+             .replace(/\{\{gym\.logo\}\}/g, resolveLogoUrl(gym.logo) || '');
 }
 
 function renderPreview() {
