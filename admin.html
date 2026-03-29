@@ -558,78 +558,6 @@ body {
   .preview-container { width: 98%; }
 }
 
-/* ── Star Chart Editor Styles ── */
-.sc-level-pills { display: flex; gap: 4px; margin-bottom: 16px; background: #e5e7eb; padding: 4px; border-radius: 12px; border: 2px solid #adb2c6; }
-.sc-level-pill {
-  flex: 1; padding: 10px 8px; text-align: center; font-size: 13px; font-weight: 700;
-  border-radius: 8px; border: none; background: transparent; color: #737373; cursor: pointer; transition: all 0.2s;
-}
-.sc-level-pill.active { background: #b48f8f; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-.sc-level-pill.disabled { opacity: 0.4; cursor: default; }
-.sc-event-accordion {
-  background: linear-gradient(145deg, #fafbfc 0%, #f0f2f5 100%);
-  border: 2px solid #c4cad4; border-radius: 12px; margin-bottom: 14px;
-  overflow: hidden; box-shadow: 0 4px 0 #c4cad4, 0 6px 12px rgba(0,0,0,0.1);
-}
-.sc-event-header {
-  padding: 12px 16px; cursor: pointer; display: flex; align-items: center;
-  justify-content: space-between; background: #e8e8e8; border-bottom: 1px solid #d1d5db;
-  user-select: none;
-}
-.sc-event-header:hover { background: #ddd; }
-.sc-event-header h3 { font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #374151; margin: 0; }
-.sc-event-header .sc-skill-count { font-size: 11px; color: #6b7280; font-weight: 600; }
-.sc-event-body { padding: 12px 16px; }
-.sc-skill-editor-card {
-  background: #fff; border: 1px solid #e0e0e0; border-left: 6px solid #b48f8f;
-  border-radius: 8px; padding: 14px 16px; margin-bottom: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-}
-.sc-skill-name-input {
-  font-size: 15px; font-weight: 800; border: none; border-bottom: 2px solid #e5e7eb;
-  width: 100%; padding: 4px 0; background: transparent; color: #374151;
-  text-transform: uppercase; letter-spacing: 0.5px;
-}
-.sc-skill-name-input:focus { outline: none; border-bottom-color: #b48f8f; }
-.sc-checkpoint-row {
-  display: flex; align-items: flex-start; gap: 8px; margin-top: 8px;
-}
-.sc-star-badge {
-  min-width: 32px; height: 24px; display: flex; align-items: center; justify-content: center;
-  background: #f3e8c0; color: #8b6914; border-radius: 4px; font-size: 11px; font-weight: 800;
-  margin-top: 6px;
-}
-.sc-checkpoint-input {
-  flex: 1; border: 1px solid #e5e7eb; border-radius: 6px; padding: 6px 10px;
-  font-size: 13px; line-height: 1.5; resize: vertical; min-height: 32px;
-  font-family: inherit;
-}
-.sc-checkpoint-input:focus { outline: none; border-color: #b48f8f; }
-.sc-checkpoint-actions { display: flex; gap: 4px; margin-top: 2px; }
-.sc-checkpoint-actions button {
-  background: none; border: 1px solid #e5e7eb; border-radius: 4px;
-  width: 24px; height: 24px; cursor: pointer; font-size: 12px; color: #9ca3af;
-  display: flex; align-items: center; justify-content: center;
-}
-.sc-checkpoint-actions button:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
-.sc-add-btn {
-  background: #f3f4f6; border: 2px dashed #d1d5db; border-radius: 8px;
-  padding: 8px 16px; cursor: pointer; font-size: 13px; color: #6b7280;
-  font-weight: 600; width: 100%; text-align: center; transition: all 0.2s;
-}
-.sc-add-btn:hover { background: #e5e7eb; border-color: #b48f8f; color: #374151; }
-.sc-skill-footer { display: flex; justify-content: flex-end; gap: 4px; margin-top: 8px; }
-.sc-skill-footer button {
-  background: none; border: 1px solid #e5e7eb; border-radius: 6px;
-  padding: 4px 10px; cursor: pointer; font-size: 11px; color: #6b7280;
-}
-.sc-skill-footer button:hover { background: #fee2e2; color: #dc2626; }
-.sc-moveup-input {
-  width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px;
-  font-size: 13px; line-height: 1.6; resize: vertical; min-height: 60px;
-  font-family: inherit; margin-bottom: 16px;
-}
-.sc-moveup-input:focus { outline: none; border-color: #b48f8f; }
 </style>
 </head>
 <body>
@@ -656,7 +584,7 @@ body {
         </a>
       </div>
       <h1>MyGymTools · Admin</h1>
-      <div class="subtitle">Edit your documents &amp; star charts</div>
+      <div class="subtitle">Edit waivers, policies &amp; gym settings</div>
     </div>
     <div class="header-right">
       <span class="save-status" id="saveStatus">All changes saved</span>
@@ -690,7 +618,6 @@ body {
       <button class="tab" id="tabGyms" onclick="switchTab('gyms')">Gyms</button>
       <button class="tab active" id="tabWaiver" onclick="switchTab('waiver')">Release & Waiver</button>
       <button class="tab" id="tabPolicy" onclick="switchTab('policy')">Policies & Procedures</button>
-      <button class="tab" id="tabStarcharts" onclick="switchTab('starcharts')">Star Charts</button>
     </div>
 
     <!-- Gym Editor -->
@@ -701,9 +628,6 @@ body {
 
     <!-- Policy Editor -->
     <div id="policyEditor" style="display:none;"></div>
-
-    <!-- Star Charts Editor -->
-    <div id="starchartsEditor" style="display:none;"></div>
   </div>
 </div>
 
@@ -748,38 +672,6 @@ var DEFAULT_GYMS = [
   { name: 'Scottsdale Gymnastics',           abbr: 'SGT', color: '#c72b12', color2: '#e6e6e6', color3: '#000000', color4: '#ffffff', logo: 'sgt-logo - 500x500.png', email: 'info@scottsdalegymnastics.com', fee: '55', domain: 'scottsdalegymnastics.com' },
   { name: 'Tigar Gymnastics',                abbr: 'TIG', color: '#f57f20', color2: '#0a3651', color3: '#7fc4e0', color4: '#ffffff', logo: 'tigar--logo - 500x500.png', email: 'info@tigargym.com', fee: '55', domain: 'tigargym.com' }
 ];
-
-var DEFAULT_STARCHARTS = {
-  level1: {
-    id: 'level1', name: 'Level 1',
-    moveUpGuide: 'Athletes move through Level 1 by earning stars in each skill. Each star marks progress on an important part of the skill. The Final Star shows the athlete can perform the full skill correctly and consistently.',
-    events: [
-      { name: 'Vault', panel: 'a', skills: [
-        { name: 'Straight Jump to Resi', checkpoints: ['Run accelerates into the hurdle','Arms down on the board, up in the air','Straight body and legs in the air'] },
-        { name: 'Handstand Flatback', checkpoints: ['Feet come together at vertical handstand','Straight line from hands to toes at vertical','Lands flat on the mat as one piece'] }
-      ]},
-      { name: 'Bars', panel: 'b', skills: [
-        { name: 'Kickover Pullover', checkpoints: ['Chin stays at the bar until toes come over','Shifts hands with fingers forward to finish in front support','Straight legs throughout the skill'] },
-        { name: 'Cast', checkpoints: ['Straight arms throughout the skill','Legs straight and together','Demonstrates straight line from shoulders to toes'] },
-        { name: 'Front Support Hold → Roll Down', checkpoints: ['Holds front support with straight arms','Chin to chest','Legs straight and together, lowers slowly to a hang'] }
-      ]},
-      { name: 'Beam', panel: 'a', skills: [
-        { name: 'Beam Mount', checkpoints: ['Jumps to front support with straight arms','Straight leg swings over without touching the beam','Stands up with arms by ears'] },
-        { name: 'Lever', checkpoints: ['Arms by ears throughout','Straight line from fingers to back foot throughout','Back leg stays straight'] },
-        { name: 'Relevé Walk', checkpoints: ['Heels stay off the beam the entire walk','Walks with straight legs','Chest up with arms out to the side'] },
-        { name: 'Straight Jump', checkpoints: ['Arms swing up as feet leave the beam and down to sides on landing','Toes pointed in the air','Lands in the same spot it started'] },
-        { name: 'Straight Jump Dismount', checkpoints: ['Arms swing up as feet leave the beam','Straight line from fingers to toes in the air','Sticks landing with hands in front, knees bent'] }
-      ]},
-      { name: 'Floor', panel: 'b', skills: [
-        { name: 'Handstand', checkpoints: ['Feet come together at vertical','Straight line from hands to toes','Straight legs in the air / arms stay by ears'] },
-        { name: 'Cartwheel', checkpoints: ['Legs pass through vertical','Second hand turned in','Arms stay by ears','Legs straight throughout','Finishes in a lunge with opposite leg in front'] },
-        { name: 'Backward Roll', checkpoints: ['Rolls with fingers pointing to shoulders','Continuous movement in the roll','Feet and knees together throughout'] },
-        { name: 'Bridge', checkpoints: ['Straight arms in the bridge','Head between the arms','Feet flat and together'] }
-      ]}
-    ]
-  }
-};
-var scActiveLevel = 'level1';
 
 /* ── Auth ── */
 async function doLogin() {
@@ -828,8 +720,7 @@ async function initEditor() {
   }
   // Load gyms from API response or use defaults
   gyms = content.gyms || JSON.parse(JSON.stringify(DEFAULT_GYMS));
-  // Initialize starcharts if not present
-  if (!content.starcharts) content.starcharts = JSON.parse(JSON.stringify(DEFAULT_STARCHARTS));
+  if (content.starcharts) delete content.starcharts;
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('editorScreen').style.display = 'block';
   renderEditor();
@@ -843,12 +734,9 @@ function switchTab(tab) {
   document.getElementById('tabGyms').classList.toggle('active', tab === 'gyms');
   document.getElementById('tabWaiver').classList.toggle('active', tab === 'waiver');
   document.getElementById('tabPolicy').classList.toggle('active', tab === 'policy');
-  document.getElementById('tabStarcharts').classList.toggle('active', tab === 'starcharts');
   document.getElementById('gymsEditor').style.display = tab === 'gyms' ? '' : 'none';
   document.getElementById('waiverEditor').style.display = tab === 'waiver' ? '' : 'none';
   document.getElementById('policyEditor').style.display = tab === 'policy' ? '' : 'none';
-  document.getElementById('starchartsEditor').style.display = tab === 'starcharts' ? '' : 'none';
-  if (tab === 'starcharts') renderStarchartsEditor();
 }
 
 /* ── Render Full Editor ── */
@@ -989,9 +877,6 @@ function syncFromEditor() {
     var itemIdx = parseInt(item.dataset.item);
     content[doc].sections[sectionIdx].items[itemIdx].html = item.innerHTML;
   });
-
-  // Star charts
-  syncStarchartsFromEditor();
 }
 
 /* ── Section CRUD ── */
@@ -1166,159 +1051,11 @@ function removeGym(idx) {
   markUnsaved();
 }
 
-/* ── Star Charts Editor ── */
-function renderStarchartsEditor() {
-  syncStarchartsFromEditor(); // save any in-progress edits before re-render
-  var container = document.getElementById('starchartsEditor');
-  var sc = content.starcharts || {};
-  var allLevels = ['level1']; // will expand: preschool, junior, level1, level2, level3
-  var levelLabels = { preschool: 'Preschool', junior: 'Junior', level1: 'Level 1', level2: 'Level 2', level3: 'Level 3' };
-
-  // Level pills
-  var pills = '<div class="sc-level-pills">';
-  ['preschool','junior','level1','level2','level3'].forEach(function(k) {
-    var available = !!sc[k];
-    var active = k === scActiveLevel;
-    pills += '<button class="sc-level-pill' + (active ? ' active' : '') + (available ? '' : ' disabled') + '" ' +
-      (available ? 'onclick="scSwitchLevel(\'' + k + '\')"' : '') + '>' +
-      (levelLabels[k] || k) + (available ? '' : ' (soon)') + '</button>';
-  });
-  pills += '</div>';
-
-  var level = sc[scActiveLevel];
-  if (!level) {
-    container.innerHTML = pills + '<div style="text-align:center;padding:40px;color:#6b7280;">No data for this level yet.</div>';
-    return;
-  }
-
-  // Move-up guide
-  var moveupHTML = '<div style="margin-bottom:16px;"><label style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;display:block;margin-bottom:4px;">Move-Up Guide Text</label>' +
-    '<textarea class="sc-moveup-input" data-sc-field="moveUpGuide">' + (level.moveUpGuide || '') + '</textarea></div>';
-
-  // Event accordions
-  var eventsHTML = '';
-  level.events.forEach(function(ev, evIdx) {
-    var skillsHTML = '';
-    ev.skills.forEach(function(sk, skIdx) {
-      var cpHTML = '';
-      sk.checkpoints.forEach(function(cp, cpIdx) {
-        cpHTML += '<div class="sc-checkpoint-row">' +
-          '<div class="sc-star-badge">★ ' + (cpIdx + 1) + '</div>' +
-          '<input class="sc-checkpoint-input" type="text" value="' + cp.replace(/"/g, '&quot;') + '" data-sc-ev="' + evIdx + '" data-sc-sk="' + skIdx + '" data-sc-cp="' + cpIdx + '" oninput="markUnsaved()">' +
-          '<div class="sc-checkpoint-actions">' +
-            '<button onclick="scDeleteCheckpoint(' + evIdx + ',' + skIdx + ',' + cpIdx + ')" title="Remove">×</button>' +
-          '</div>' +
-        '</div>';
-      });
-      skillsHTML += '<div class="sc-skill-editor-card">' +
-        '<input class="sc-skill-name-input" type="text" value="' + sk.name.replace(/"/g, '&quot;') + '" data-sc-ev="' + evIdx + '" data-sc-sk="' + skIdx + '" data-sc-field="name" oninput="markUnsaved()">' +
-        cpHTML +
-        '<button class="sc-add-btn" style="margin-top:8px;" onclick="scAddCheckpoint(' + evIdx + ',' + skIdx + ')">+ Add Checkpoint</button>' +
-        '<div class="sc-skill-footer">' +
-          (skIdx > 0 ? '<button onclick="scMoveSkill(' + evIdx + ',' + skIdx + ',-1)">↑ Up</button>' : '') +
-          (skIdx < ev.skills.length - 1 ? '<button onclick="scMoveSkill(' + evIdx + ',' + skIdx + ',1)">↓ Down</button>' : '') +
-          '<button onclick="scDeleteSkill(' + evIdx + ',' + skIdx + ')">Delete Skill</button>' +
-        '</div>' +
-      '</div>';
-    });
-    eventsHTML += '<div class="sc-event-accordion" id="scEvent' + evIdx + '">' +
-      '<div class="sc-event-header" onclick="scToggleEvent(' + evIdx + ')">' +
-        '<h3>' + ev.name + '</h3>' +
-        '<span class="sc-skill-count">' + ev.skills.length + ' skills</span>' +
-      '</div>' +
-      '<div class="sc-event-body">' +
-        skillsHTML +
-        '<button class="sc-add-btn" onclick="scAddSkill(' + evIdx + ')">+ Add Skill to ' + ev.name + '</button>' +
-      '</div>' +
-    '</div>';
-  });
-
-  container.innerHTML = pills + moveupHTML + eventsHTML;
-}
-
-function scSwitchLevel(levelId) {
-  syncStarchartsFromEditor();
-  scActiveLevel = levelId;
-  renderStarchartsEditor();
-}
-
-function scToggleEvent(evIdx) {
-  var body = document.querySelector('#scEvent' + evIdx + ' .sc-event-body');
-  if (body) body.style.display = body.style.display === 'none' ? '' : 'none';
-}
-
-function syncStarchartsFromEditor() {
-  if (!content.starcharts || !content.starcharts[scActiveLevel]) return;
-  var level = content.starcharts[scActiveLevel];
-  // Move-up guide
-  var mug = document.querySelector('[data-sc-field="moveUpGuide"]');
-  if (mug) level.moveUpGuide = mug.value;
-  // Skill names
-  document.querySelectorAll('.sc-skill-name-input[data-sc-field="name"]').forEach(function(el) {
-    var evIdx = parseInt(el.dataset.scEv);
-    var skIdx = parseInt(el.dataset.scSk);
-    if (level.events[evIdx] && level.events[evIdx].skills[skIdx]) {
-      level.events[evIdx].skills[skIdx].name = el.value;
-    }
-  });
-  // Checkpoints
-  document.querySelectorAll('.sc-checkpoint-input[data-sc-ev]').forEach(function(el) {
-    var evIdx = parseInt(el.dataset.scEv);
-    var skIdx = parseInt(el.dataset.scSk);
-    var cpIdx = parseInt(el.dataset.scCp);
-    if (level.events[evIdx] && level.events[evIdx].skills[skIdx]) {
-      level.events[evIdx].skills[skIdx].checkpoints[cpIdx] = el.value;
-    }
-  });
-}
-
-function scAddCheckpoint(evIdx, skIdx) {
-  syncStarchartsFromEditor();
-  content.starcharts[scActiveLevel].events[evIdx].skills[skIdx].checkpoints.push('');
-  renderStarchartsEditor();
-  markUnsaved();
-}
-
-function scDeleteCheckpoint(evIdx, skIdx, cpIdx) {
-  syncStarchartsFromEditor();
-  var cps = content.starcharts[scActiveLevel].events[evIdx].skills[skIdx].checkpoints;
-  if (cps.length <= 1) { alert('Must have at least 1 checkpoint.'); return; }
-  cps.splice(cpIdx, 1);
-  renderStarchartsEditor();
-  markUnsaved();
-}
-
-function scAddSkill(evIdx) {
-  syncStarchartsFromEditor();
-  content.starcharts[scActiveLevel].events[evIdx].skills.push({ name: 'New Skill', checkpoints: ['','',''] });
-  renderStarchartsEditor();
-  markUnsaved();
-}
-
-function scDeleteSkill(evIdx, skIdx) {
-  if (!confirm('Delete this skill?')) return;
-  syncStarchartsFromEditor();
-  content.starcharts[scActiveLevel].events[evIdx].skills.splice(skIdx, 1);
-  renderStarchartsEditor();
-  markUnsaved();
-}
-
-function scMoveSkill(evIdx, skIdx, dir) {
-  syncStarchartsFromEditor();
-  var skills = content.starcharts[scActiveLevel].events[evIdx].skills;
-  var newIdx = skIdx + dir;
-  if (newIdx < 0 || newIdx >= skills.length) return;
-  var temp = skills[skIdx];
-  skills[skIdx] = skills[newIdx];
-  skills[newIdx] = temp;
-  renderStarchartsEditor();
-  markUnsaved();
-}
-
 /* ── Save ── */
 async function saveContent() {
   syncFromEditor();
   content.gyms = gyms;
+  if (content.starcharts) delete content.starcharts;
   var btn = document.getElementById('saveBtn');
   btn.disabled = true;
   btn.textContent = 'Saving...';

@@ -40,7 +40,7 @@ waiver-viewer-web/
 | Hosting | Vercel (free tier) | Free |
 | Database | Vercel KV / Upstash Redis (free tier) | Free |
 | Frontend | Vanilla HTML/CSS/JS (no frameworks) | -- |
-| PDF generation | jsPDF + html2canvas (loaded from CDN) | -- |
+| PDF generation | jsPDF (+ JSZip for bulk), loaded from CDN | -- |
 | Auth | PIN-based with SHA-256 hash + session tokens | -- |
 
 ---

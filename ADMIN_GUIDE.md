@@ -18,14 +18,14 @@ The gear icon in the top-right corner of the main site also links to the admin p
 
 ## The Three Tabs
 
-### 1. Release & Waiver
+### 1. Gyms
+Manage all 10 gyms — names, abbreviations, fees, domains, emails, logos, and brand colors.
+
+### 2. Release & Waiver
 Edit the waiver document that all gyms share. Each section is shown as a card you can edit.
 
-### 2. Policies & Procedures
+### 3. Policies & Procedures
 Edit the policies document. Same card-based editor as the waiver tab.
-
-### 3. Gyms
-Manage all 10 gyms — names, abbreviations, fees, domains, emails, logos, and brand colors.
 
 ---
 
