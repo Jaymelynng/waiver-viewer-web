@@ -61,10 +61,11 @@ Shared text uses placeholders like `{{gym.name}}`. Gym-specific fields come from
 | Doc | Topics |
 |-----|--------|
 | [README.md](../README.md) | Architecture, APIs, JSON shape, env vars, logos |
+| [POLICIES_WORKSPACE.md](POLICIES_WORKSPACE.md) | This page — workspace map, verification steps |
 | [ADMIN_GUIDE.md](../ADMIN_GUIDE.md) | Day-to-day Admin |
 | [SETUP_GUIDE.md](../SETUP_GUIDE.md) | Vercel + KV + PIN + seed |
 
-MyGymTools setup notes live in the **parent** `policies project` folder on your machine (if you still have those `.md` files there).
+MyGymTools setup notes (`HOW_TO_ADD_…`, `MYGYMTOOLS_SIMPLER_…`) live in the **parent** `policies project` folder on your machine; they are not committed to this repo unless you add them later.
 
 ---
 

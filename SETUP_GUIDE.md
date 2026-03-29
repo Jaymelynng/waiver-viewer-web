@@ -41,7 +41,12 @@ This automatically sets the `KV_REST_API_URL` and `KV_REST_API_TOKEN` environmen
 1. Pick a PIN (numbers only, 4-6 digits)
 2. Generate the SHA-256 hash of your PIN. You can use any of these:
    - **Online**: Go to https://emn178.github.io/online-tools/sha256.html, type your PIN, copy the hash
-   - **Terminal**: `echo -n "101484" | shasum -a 256` (replace 101484 with your PIN)
+   - **Mac/Linux terminal**: `echo -n "101484" | shasum -a 256` (replace `101484` with your PIN)
+   - **Windows (PowerShell)**:
+     ```powershell
+     [BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash([System.Text.Encoding]::UTF8.GetBytes("101484"))).Replace("-","").ToLower()
+     ```
+     (Replace `101484` inside the quotes with your PIN.)
 3. In the Vercel dashboard: **Settings** > **Environment Variables**
 4. Add a new variable:
    - **Name**: `ADMIN_PASSWORD_HASH`
