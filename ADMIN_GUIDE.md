@@ -45,6 +45,9 @@ Edit the policies document. Same card-based editor as the waiver tab.
 | `{{gym.abbr}}` | Abbreviation (e.g. "CCP") |
 | `{{gym.color}}` | Primary hex color (e.g. "#1f53a3") |
 | `{{gym.color2}}` | Secondary hex color (e.g. "#bf0a30") |
+| `{{gym.color3}}` | Accent hex color (e.g. "#d8d8d8") |
+| `{{gym.color4}}` | Neutral / light surface hex (e.g. "#ffffff") |
+| `{{gym.logo}}` | Logo filename as stored in `/logos/` (e.g. `ccp_cpf logo - 500x500.png`) |
 
 ---
 
@@ -75,9 +78,10 @@ Each document is made up of sections. You can:
 In the **Gyms** tab:
 
 - **Edit gym info**: Click any gym card to expand it. Change the name, abbreviation, fee, domain, email, or logo filename.
-- **Change colors**: Each gym has a Primary Color and Secondary Color. You can either click the color swatch to use the visual picker, or type a hex code directly (like `#3e266b`).
-  - **Primary color** = header bar, gym selector cards, active tab highlighting
-  - **Secondary color** = warning box text/border, policy intro box text/border
+- **Change colors**: Each gym has **four** colors — Primary, Secondary, Accent, and Neutral. Click a swatch for the picker or type a hex code (e.g. `#3e266b`).
+  - **Primary** = header bar, gym selector cards, active document tab
+  - **Secondary** = default accent for warning box and policy intro (some gyms use per-gym overrides on the main site)
+  - **Accent** (`color3`) and **Neutral** (`color4`) = available in HTML via `{{gym.color3}}` / `{{gym.color4}}` and as CSS variables on the viewer for future styling
 - **Add a gym**: Click "Add Gym" at the bottom
 - **Remove a gym**: Click "Remove Gym" on the gym's card
 

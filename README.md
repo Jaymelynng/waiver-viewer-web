@@ -97,6 +97,9 @@ These placeholders work anywhere in the waiver or policy text:
 | `{{gym.abbr}}` | Short abbreviation | CCP |
 | `{{gym.color}}` | Primary brand color (hex) | #1f53a3 |
 | `{{gym.color2}}` | Secondary brand color (hex) | #bf0a30 |
+| `{{gym.color3}}` | Accent / background tint (hex) | #d8d8d8 |
+| `{{gym.color4}}` | Neutral / light surface (hex) | #ffffff |
+| `{{gym.logo}}` | Logo filename (same as in Gyms tab) | `ccp_cpf logo - 500x500.png` |
 
 ---
 
@@ -136,12 +139,14 @@ Gym data is stored separately under the `gyms` key as an array of objects.
 
 ## Gym Color System
 
-Each gym has two brand colors:
+Each gym has **four** colors in Admin (all optional in templates via `{{gym.color}}` … `{{gym.color4}}`):
 
-- **Primary color** (`color`) — Used for the header bar, gym selector cards, and active tab
-- **Secondary color** (`color2`) — Used for the warning box border/text and policy intro box
+- **Primary** (`color`) — Header bar, gym cards, active document tab  
+- **Secondary** (`color2`) — Warning box and policy intro accent  
+- **Accent** (`color3`) — Exposed as `{{gym.color3}}` and `--gym-color3` on the viewer (use in custom HTML or extended styling)  
+- **Neutral** (`color4`) — Same for `{{gym.color4}}` / `--gym-color4`  
 
-These are set as CSS custom properties (`--gym-color`, `--gym-color2`) when a gym is selected, so the entire page theme updates automatically.
+Primary and secondary drive most of the default UI (header, tabs, warning/intro accents).
 
 ---
 

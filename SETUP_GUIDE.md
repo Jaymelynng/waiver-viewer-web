@@ -58,7 +58,9 @@ The database starts empty. You need to populate it with the default waiver/polic
 
 1. Visit: `https://your-domain.vercel.app/api/seed`
 2. You should see a success message with the content and gym data that was created
-3. This only needs to be done once. If you ever need to reset to defaults, visit: `https://your-domain.vercel.app/api/seed?force=true`
+3. This only needs to be done once. If you ever need to reset to defaults, visit: `https://your-domain.vercel.app/api/seed?force=true` — **warning:** `force=true` overwrites existing KV content with the built-in defaults; export or copy anything you need from Admin first.
+
+**Security note:** The seed endpoint is intentionally open (no PIN). Anyone who guesses the URL could populate an empty database or, with `?force=true`, reset data. After first deploy, treat the seed URL as sensitive; consider restricting access in Vercel (e.g. IP allowlist / middleware) if that is a concern for your threat model.
 
 ---
 
