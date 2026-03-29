@@ -24,6 +24,7 @@ waiver-viewer-web/
   admin.html          Admin editor — login, edit text, manage gyms, preview
   vercel.json         Vercel config (clean URLs)
   package.json        Just one dependency: @vercel/kv
+  docs/               Workspace map + verification notes (see POLICIES_WORKSPACE.md)
   api/
     content.js        GET/PUT — reads and writes waiver/policy content + gym data
     auth.js           POST — PIN login, returns 24-hour session token
@@ -176,3 +177,13 @@ Logos must be in the root of this folder (same level as index.html) with these e
 | TIG | `tigar--logo - 500x500.png` |
 
 If a logo file is missing, the gym's abbreviation is shown instead.
+
+---
+
+## More documentation
+
+| Doc | Use when |
+|-----|----------|
+| [ADMIN_GUIDE.md](ADMIN_GUIDE.md) | Editing waivers, gyms, policies in Admin |
+| [SETUP_GUIDE.md](SETUP_GUIDE.md) | New Vercel project, KV, PIN, first-time seed |
+| [docs/POLICIES_WORKSPACE.md](docs/POLICIES_WORKSPACE.md) | Big-picture map (repo vs PC helpers), gym list, **how to sanity-check the live site without coding** |
