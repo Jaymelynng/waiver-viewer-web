@@ -1,6 +1,6 @@
 # Policies workspace (full picture)
 
-This file is in the **GitHub repo** so it stays backed up with the app. On your PC, the folder **`JAYME PROJECTS\policies project`** may also contain HTML/markdown helpers **next to** this `waiver-viewer-web` folder — those helpers are not always in Git; keep that parent folder in OneDrive/backup if you rely on them.
+This file is in the **GitHub repo** so it stays backed up with the app. On your PC, **`policies project\offline-helpers\`** holds QR pages, email drafts, and MyGymTools notes — **not** deployed with this repo; back up that folder if you rely on it.
 
 ---
 
@@ -9,7 +9,7 @@ This file is in the **GitHub repo** so it stays backed up with the app. On your 
 | Item | Purpose |
 |------|--------|
 | **This repo (`waiver-viewer-web`)** | **Waiver Hub** — public site, admin, Vercel API, logos. What Vercel deploys. |
-| **Sibling files on your PC** (same parent folder as this repo) | MyGymTools how-tos, `QR_Codes.html`, `Policy_Update_Tracker.html`, `manager-emails.html` — offline rollout helpers. |
+| **`offline-helpers/`** (sibling folder on your PC, next to this repo) | iClassPro QR page, SharePoint email drafts, rollout tracker, MyGymTools `.md` — see that folder’s `README.md`. Not part of Waiver Hub. |
 
 ### Optional
 
@@ -65,7 +65,7 @@ Shared text uses placeholders like `{{gym.name}}`. Gym-specific fields come from
 | [ADMIN_GUIDE.md](../ADMIN_GUIDE.md) | Day-to-day Admin |
 | [SETUP_GUIDE.md](../SETUP_GUIDE.md) | Vercel + KV + PIN + seed |
 
-MyGymTools setup notes (`HOW_TO_ADD_…`, `MYGYMTOOLS_SIMPLER_…`) live in the **parent** `policies project` folder on your machine; they are not committed to this repo unless you add them later.
+MyGymTools setup notes live under **`policies project/offline-helpers/`** on your machine; they are not in this Git repo unless you copy them in later.
 
 ---
 
