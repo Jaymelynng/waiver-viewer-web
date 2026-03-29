@@ -1,19 +1,18 @@
 # Policies workspace (full picture)
 
-This file is in the **GitHub repo** so it stays backed up with the app. On your PC, **`policies project\offline-helpers\`** holds QR pages, email drafts, and MyGymTools notes — **not** deployed with this repo; back up that folder if you rely on it.
+This file is in the **GitHub repo** with **Waiver Hub** — the public site, Admin, API, and logos. That is the whole product.
 
 ---
 
-## What lives where
+## What this repo is
 
 | Item | Purpose |
 |------|--------|
-| **This repo (`waiver-viewer-web`)** | **Waiver Hub** — public site, admin, Vercel API, logos. What Vercel deploys. |
-| **`offline-helpers/`** (sibling folder on your PC, next to this repo) | iClassPro QR page, SharePoint email drafts, rollout tracker, MyGymTools `.md` — see that folder’s `README.md`. Not part of Waiver Hub. |
+| **`waiver-viewer-web`** | **Waiver Hub** — what you deploy to Vercel. |
 
-### Optional
+### Optional (elsewhere)
 
-Word/PDF originals and extra logo backups can live in SharePoint or elsewhere. **Live legal text** is edited in **Admin** and stored in **Vercel KV**.
+Word/PDF originals and logo backups can live in SharePoint or wherever you keep brand files. **Live legal text** for the website is edited in **Admin** and stored in **Vercel KV**.
 
 ---
 
@@ -61,11 +60,9 @@ Shared text uses placeholders like `{{gym.name}}`. Gym-specific fields come from
 | Doc | Topics |
 |-----|--------|
 | [README.md](../README.md) | Architecture, APIs, JSON shape, env vars, logos |
-| [POLICIES_WORKSPACE.md](POLICIES_WORKSPACE.md) | This page — workspace map, verification steps |
+| [POLICIES_WORKSPACE.md](POLICIES_WORKSPACE.md) | This page — map + verification steps |
 | [ADMIN_GUIDE.md](../ADMIN_GUIDE.md) | Day-to-day Admin |
 | [SETUP_GUIDE.md](../SETUP_GUIDE.md) | Vercel + KV + PIN + seed |
-
-MyGymTools setup notes live under **`policies project/offline-helpers/`** on your machine; they are not in this Git repo unless you copy them in later.
 
 ---
 
@@ -79,4 +76,4 @@ MyGymTools setup notes live under **`policies project/offline-helpers/`** on you
 
 ## Removed / archived (history)
 
-Old one-off HTML, star-chart prototype, and Google Sheets tracker were removed from the PC workspace in favor of Waiver Hub. Old app code may still be in **Git history** if it was ever committed.
+Older HTML prototypes, star charts, Google Sheets tracker, and offline helper pages (QR, SharePoint email drafts, etc.) were removed from this workspace so **only Waiver Hub** remains here. Old files may exist in **Git history**, **OneDrive version history**, or **Recycle Bin** if you need to recover something.
