@@ -1200,18 +1200,30 @@ var ICL = { h1: 'color: #1a1a1a; font-size: 18px;', h2: 'color: #1a1a1a; font-si
 
 function iclassLine(n) { var s = ''; for (var i = 0; i < n; i++) s += '_'; return s; }
 
+/* Wrap bare http(s)/www URLs in proper clickable links (content stores them as plain text). */
+function iclassLinkify(s) {
+  if (!s) return s;
+  return s.replace(/(https?:\/\/[^\s<]+)|(www\.[^\s<]+)/gi, function(match) {
+    var trail = '', m = match;
+    while (/[.,);:]$/.test(m)) { trail = m.slice(-1) + trail; m = m.slice(0, -1); }
+    var href = /^www\./i.test(m) ? 'https://' + m : m;
+    return '<a href="' + href + '">' + m + '</a>' + trail;
+  });
+}
+function iclassBody(html, gym) { return iclassLinkify(substituteVars(html || '', gym)); }
+
 function iclassSections(sections, gym) {
   var out = [];
   for (var i = 0; i < sections.length; i++) {
     var s = sections[i];
     if (s.type === 'h1') out.push('<h1 style="' + ICL.h1 + '">' + substituteVars(s.text, gym) + '</h1>');
     else if (s.type === 'h2') out.push('<h2 style="' + ICL.h2 + '">' + substituteVars(s.text, gym) + '</h2>');
-    else if (s.type === 'p' || s.type === 'indent') out.push('<p style="' + ICL.body + '">' + substituteVars(s.html || '', gym) + '</p>');
+    else if (s.type === 'p' || s.type === 'indent') out.push('<p style="' + ICL.body + '">' + iclassBody(s.html, gym) + '</p>');
     else if (s.type === 'ul' || s.type === 'ol') {
       var li = '';
       for (var j = 0; j < (s.items || []).length; j++) {
-        li += '<li>' + substituteVars(s.items[j].html, gym);
-        if (s.items[j].sub) { li += '<ul>'; for (var k = 0; k < s.items[j].sub.length; k++) li += '<li>' + substituteVars(s.items[j].sub[k], gym) + '</li>'; li += '</ul>'; }
+        li += '<li>' + iclassBody(s.items[j].html, gym);
+        if (s.items[j].sub) { li += '<ul>'; for (var k = 0; k < s.items[j].sub.length; k++) li += '<li>' + iclassBody(s.items[j].sub[k], gym) + '</li>'; li += '</ul>'; }
         li += '</li>';
       }
       out.push('<' + s.type + ' style="' + ICL.body + '">' + li + '</' + s.type + '>');
@@ -1237,7 +1249,7 @@ function buildIClassHTML(doc, gym) {
   } else {
     var p = content.policy;
     out.push('<h1 style="' + ICL.h1 + '">' + substituteVars(p.title, gym) + '</h1>');
-    out.push('<p style="' + ICL.body + '">' + substituteVars(p.intro, gym) + '</p>');
+    out.push('<p style="' + ICL.body + '">' + iclassBody(p.intro, gym) + '</p>');
     out = out.concat(iclassSections(p.sections, gym));
   }
   return out.join('\n');
