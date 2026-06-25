@@ -1228,16 +1228,19 @@ function iclassSections(sections, gym) {
       }
       out.push('<' + s.type + ' style="' + ICL.body + '">' + li + '</' + s.type + '>');
     }
-    else if (s.type === 'sig') {
-      var rows = '';
-      for (var ri = 0; ri < s.lines.length; ri++) {
-        rows += '<p>' + s.lines[ri].map(function(f) { return f.label + ': ' + iclassLine(24); }).join(' &nbsp;&nbsp;&nbsp; ') + '</p>';
-      }
-      out.push('<div class="sig-line" style="' + ICL.body + '">' + rows + '</div>');
-    }
+    /* iClass captures the signature electronically — the waiver carries no sig block,
+       and the policy ends with one standard "Signed / Date / Printed Name" block
+       (appended in buildIClassHTML), so the per-section detailed sigs are skipped here. */
   }
   return out;
 }
+
+/* The single simplified signature block iClass uses at the end of the Policy. */
+var ICL_POLICY_SIG =
+  '<div class="sig-line" style="' + ICL.body + '">\n' +
+  '<p>Signed: _______________________________________________ &nbsp;&nbsp;&nbsp; Date: ______________</p>\n' +
+  '<p>Printed Name: _________________________________________</p>\n' +
+  '</div>';
 
 function buildIClassHTML(doc, gym) {
   var out = [];
@@ -1246,11 +1249,13 @@ function buildIClassHTML(doc, gym) {
     out.push('<h1 style="' + ICL.h1 + '">' + w.title.map(function(t) { return substituteVars(t, gym); }).join(' ') + '</h1>');
     out.push('<p style="' + ICL.body + '"><strong>' + substituteVars(w.warning, gym) + '</strong></p>');
     out = out.concat(iclassSections(w.sections, gym));
+    /* waiver ends at SEVERABILITY — no signature block */
   } else {
     var p = content.policy;
     out.push('<h1 style="' + ICL.h1 + '">' + substituteVars(p.title, gym) + '</h1>');
     out.push('<p style="' + ICL.body + '">' + iclassBody(p.intro, gym) + '</p>');
     out = out.concat(iclassSections(p.sections, gym));
+    out.push(ICL_POLICY_SIG);
   }
   return out.join('\n');
 }
