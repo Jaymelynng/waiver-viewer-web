@@ -44,7 +44,7 @@ const DEFAULT_CONTENT = {
         { html: "Thanksgiving" }, { html: "Day After Thanksgiving (Black Friday)" },
         { html: "Christmas Eve" }, { html: "Christmas Day" }
       ]},
-      { type: "p", html: "Class payments are automatically charged to the credit card on file on the 15th of the prior month. For example, payment for the month of June will be processed on May 15th." },
+      { type: "p", html: "Class payments are automatically charged to the credit card on file on the {{gym.billDay}} of the prior month. For example, payment for the month of June will be processed on May {{gym.billDay}}." },
       { type: "ul", items: [
         { html: "Dates may vary based on holidays." },
         { html: "A credit card on file is required for monthly payments." }
@@ -194,16 +194,17 @@ const DEFAULT_CONTENT = {
 };
 
 const DEFAULT_GYMS = [
-  { name: 'Capital Gymnastics Cedar Park',  abbr: 'CCP', color: '#1f53a3', color2: '#bf0a30', color3: '#d8d8d8', color4: '#ffffff', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgymcpk.com', fee: '55', domain: 'capgymcpk.com' },
-  { name: 'Capital Gymnastics Pflugerville', abbr: 'CPF', color: '#1f53a3', color2: '#bf0a30', color3: '#d8d8d8', color4: '#ffffff', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgympfl.com', fee: '55', domain: 'capgympfl.com' },
-  { name: 'Capital Gymnastics Round Rock',   abbr: 'CRR', color: '#ff1493', color2: '#c0c0c0', color3: '#ffffff', color4: '#3c3939', logo: 'CRR-logo - 500x500.png', email: 'info@capgymrnd.com', fee: '55', domain: 'capgymrnd.com' },
-  { name: 'Rowland Ballard - Atascocita',    abbr: 'RBA', color: '#1a3c66', color2: '#c52928', color3: '#739ab9', color4: '#ffffff', logo: 'rba_rbk--logo - 500x500.png', email: 'info@rbatascocita.com', fee: '50', domain: 'rbatascocita.com' },
-  { name: 'Rowland Ballard - Kingwood',      abbr: 'RBK', color: '#1a3c66', color2: '#c52928', color3: '#739ab9', color4: '#ffffff', logo: 'rba_rbk--logo - 500x500.png', email: 'info@rbkingwood.com', fee: '50', domain: 'rbkingwood.com' },
-  { name: 'Houston Gymnastics Academy',      abbr: 'HGA', color: '#c91724', color2: '#262626', color3: '#d0d0d8', color4: '#ffffff', logo: 'hga--logo - 500x500.png', email: 'info@houstongymnastics.com', fee: '55', domain: 'houstongymnastics.com' },
-  { name: 'Estrella Gymnastics',             abbr: 'EST', color: '#011837', color2: '#666666', color3: '#100f0f', color4: '#ffffff', logo: 'est--logo - 500x500.png', email: 'info@estrellagym.com', fee: '55', domain: 'estrellagym.com' },
-  { name: 'Oasis Gymnastics',                abbr: 'OAS', color: '#3eb29f', color2: '#3e266b', color3: '#e7e6f0', color4: '#ffffff', logo: 'oasis--logo - 500x500.png', email: 'info@oasisgym.com', fee: '55', domain: 'oasisgym.com' },
-  { name: 'Scottsdale Gymnastics',           abbr: 'SGT', color: '#c72b12', color2: '#e6e6e6', color3: '#000000', color4: '#ffffff', logo: 'sgt-logo - 500x500.png', email: 'info@scottsdalegymnastics.com', fee: '55', domain: 'scottsdalegymnastics.com' },
-  { name: 'Tigar Gymnastics',                abbr: 'TIG', color: '#f57f20', color2: '#0a3651', color3: '#7fc4e0', color4: '#ffffff', logo: 'tigar--logo - 500x500.png', email: 'info@tigargym.com', fee: '55', domain: 'tigargym.com' }
+  { name: 'Capital Gymnastics Cedar Park',  abbr: 'CCP', color: '#1f53a3', color2: '#bf0a30', color3: '#d8d8d8', color4: '#ffffff', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgymcpk.com', fee: '55', domain: 'capgymcpk.com', billDay: '15th' },
+  { name: 'Capital Gymnastics Pflugerville', abbr: 'CPF', color: '#1f53a3', color2: '#bf0a30', color3: '#d8d8d8', color4: '#ffffff', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgympfl.com', fee: '55', domain: 'capgympfl.com', billDay: '15th' },
+  { name: 'Capital Gymnastics Round Rock',   abbr: 'CRR', color: '#ff1493', color2: '#c0c0c0', color3: '#ffffff', color4: '#3c3939', logo: 'CRR-logo - 500x500.png', email: 'info@capgymrnd.com', fee: '55', domain: 'capgymrnd.com', billDay: '15th' },
+  { name: 'Rowland Ballard - Atascocita',    abbr: 'RBA', color: '#1a3c66', color2: '#c52928', color3: '#739ab9', color4: '#ffffff', logo: 'rba_rbk--logo - 500x500.png', email: 'info@rbatascocita.com', fee: '50', domain: 'rbatascocita.com', billDay: '15th' },
+  { name: 'Rowland Ballard - Kingwood',      abbr: 'RBK', color: '#1a3c66', color2: '#c52928', color3: '#739ab9', color4: '#ffffff', logo: 'rba_rbk--logo - 500x500.png', email: 'info@rbkingwood.com', fee: '50', domain: 'rbkingwood.com', billDay: '15th' },
+  { name: 'Houston Gymnastics Academy',      abbr: 'HGA', color: '#c91724', color2: '#262626', color3: '#d0d0d8', color4: '#ffffff', logo: 'hga--logo - 500x500.png', email: 'info@houstongymnastics.com', fee: '55', domain: 'houstongymnastics.com', billDay: '15th' },
+  { name: 'Estrella Gymnastics',             abbr: 'EST', color: '#011837', color2: '#666666', color3: '#100f0f', color4: '#ffffff', logo: 'est--logo - 500x500.png', email: 'info@estrellagym.com', fee: '55', domain: 'estrellagym.com', billDay: '15th' },
+  { name: 'Oasis Gymnastics',                abbr: 'OAS', color: '#3eb29f', color2: '#3e266b', color3: '#e7e6f0', color4: '#ffffff', logo: 'oasis--logo - 500x500.png', email: 'info@oasisgym.com', fee: '55', domain: 'oasisgym.com', billDay: '15th' },
+  { name: 'Scottsdale Gymnastics',           abbr: 'SGT', color: '#c72b12', color2: '#e6e6e6', color3: '#000000', color4: '#ffffff', logo: 'sgt-logo - 500x500.png', email: 'info@scottsdalegymnastics.com', fee: '55', domain: 'scottsdalegymnastics.com', billDay: '15th' },
+  { name: 'Tigar Gymnastics',                abbr: 'TIG', color: '#f57f20', color2: '#0a3651', color3: '#7fc4e0', color4: '#ffffff', logo: 'tigar--logo - 500x500.png', email: 'info@tigargym.com', fee: '55', domain: 'tigargym.com', billDay: '15th' },
+  { name: 'Metro Gymnastics Center',         abbr: 'MGC', color: '#0097be', color2: '#0097be', color3: '#a7a7a7', color4: '#ffffff', logo: 'metro--logo - 500x500.png', email: 'info@metrogymnastics.com', fee: '35', domain: 'metrogymnastics.com', billDay: '20th' }
 ];
 
 export { DEFAULT_CONTENT, DEFAULT_GYMS };

@@ -280,7 +280,7 @@
       text-align: center;
       margin: 0 0 8px;
       font-weight: bold;
-      color: var(--gym-color, #1a1a1a);
+      color: var(--gym-h1-color, var(--gym-color, #1a1a1a));
     }
     .page h2 {
       font-family: 'Segoe UI', sans-serif;
@@ -293,7 +293,8 @@
       font-weight: bold;
       font-size: 10pt;
       margin: 0 0 10px;
-      border: 2px solid var(--gym-warning-color, var(--gym-color, #1a1a1a));
+      background: var(--gym-warning-bg, transparent);
+      border: 2px solid var(--gym-warning-border, var(--gym-warning-color, var(--gym-color, #1a1a1a)));
       color: var(--gym-warning-color, var(--gym-color, #1a1a1a));
       padding: 8px 14px;
       border-radius: 5px;
@@ -304,9 +305,9 @@
       text-align: center;
       font-size: 10pt;
       margin: 0 0 14px;
-      border: 2px solid var(--gym-intro-color, var(--gym-color2, #1a1a1a));
+      border: 2px solid var(--gym-intro-border, var(--gym-intro-color, var(--gym-color2, #1a1a1a)));
       color: var(--gym-intro-color, var(--gym-color2, #1a1a1a));
-      background: color-mix(in srgb, var(--gym-color2, #1e293b) 15%, white);
+      background: var(--gym-intro-bg, color-mix(in srgb, var(--gym-color2, #1e293b) 15%, white));
       padding: 12px 18px;
       border-radius: 8px;
       -webkit-print-color-adjust: exact;
@@ -351,7 +352,7 @@
       }
       .page .branded-header img { height: 40px !important; }
       .page .branded-header .header-name { font-size: 14pt !important; }
-      .page h1 { font-size: 10pt !important; margin: 0 0 10px !important; color: var(--gym-color) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .page h1 { font-size: 10pt !important; margin: 0 0 10px !important; color: var(--gym-h1-color, var(--gym-color)) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .page h2 { font-size: 9.5pt !important; margin: 12px 0 6px !important; }
       .page .warning {
         font-size: 8.5pt !important;
@@ -898,24 +899,32 @@
 
 <script>
 let GYMS = [
-  { name: 'Capital Gymnastics Cedar Park',  abbr: 'CCP', color: '#1f53a3', color2: '#bf0a30', color3: '#d8d8d8', color4: '#ffffff', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgymcpk.com', fee: '55', domain: 'capgymcpk.com' },
-  { name: 'Capital Gymnastics Pflugerville', abbr: 'CPF', color: '#1f53a3', color2: '#bf0a30', color3: '#d8d8d8', color4: '#ffffff', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgympfl.com', fee: '55', domain: 'capgympfl.com' },
-  { name: 'Capital Gymnastics Round Rock',   abbr: 'CRR', color: '#ff1493', color2: '#c0c0c0', color3: '#ffffff', color4: '#3c3939', logo: 'CRR-logo - 500x500.png', email: 'info@capgymrnd.com', fee: '55', domain: 'capgymrnd.com' },
-  { name: 'Rowland Ballard - Atascocita',    abbr: 'RBA', color: '#1a3c66', color2: '#c52928', color3: '#739ab9', color4: '#ffffff', logo: 'rba_rbk--logo - 500x500.png', email: 'info@rbatascocita.com', fee: '50', domain: 'rbatascocita.com' },
-  { name: 'Rowland Ballard - Kingwood',      abbr: 'RBK', color: '#1a3c66', color2: '#c52928', color3: '#739ab9', color4: '#ffffff', logo: 'rba_rbk--logo - 500x500.png', email: 'info@rbkingwood.com', fee: '50', domain: 'rbkingwood.com' },
-  { name: 'Houston Gymnastics Academy',      abbr: 'HGA', color: '#c91724', color2: '#262626', color3: '#d0d0d8', color4: '#ffffff', logo: 'hga--logo - 500x500.png', email: 'info@houstongymnastics.com', fee: '55', domain: 'houstongymnastics.com' },
-  { name: 'Estrella Gymnastics',             abbr: 'EST', color: '#011837', color2: '#666666', color3: '#100f0f', color4: '#ffffff', logo: 'est--logo - 500x500.png', email: 'info@estrellagym.com', fee: '55', domain: 'estrellagym.com' },
-  { name: 'Oasis Gymnastics',                abbr: 'OAS', color: '#3eb29f', color2: '#3e266b', color3: '#e7e6f0', color4: '#ffffff', logo: 'oasis--logo - 500x500.png', email: 'info@oasisgym.com', fee: '55', domain: 'oasisgym.com' },
-  { name: 'Scottsdale Gymnastics',           abbr: 'SGT', color: '#c72b12', color2: '#e6e6e6', color3: '#000000', color4: '#ffffff', logo: 'sgt-logo - 500x500.png', email: 'info@scottsdalegymnastics.com', fee: '55', domain: 'scottsdalegymnastics.com' },
-  { name: 'Tigar Gymnastics',                abbr: 'TIG', color: '#f57f20', color2: '#0a3651', color3: '#7fc4e0', color4: '#ffffff', logo: 'tigar--logo - 500x500.png', email: 'info@tigargym.com', fee: '55', domain: 'tigargym.com' }
+  { name: 'Capital Gymnastics Cedar Park',  abbr: 'CCP', color: '#1f53a3', color2: '#bf0a30', color3: '#d8d8d8', color4: '#ffffff', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgymcpk.com', fee: '55', domain: 'capgymcpk.com', billDay: '15th' },
+  { name: 'Capital Gymnastics Pflugerville', abbr: 'CPF', color: '#1f53a3', color2: '#bf0a30', color3: '#d8d8d8', color4: '#ffffff', logo: 'ccp_cpf logo - 500x500.png', email: 'info@capgympfl.com', fee: '55', domain: 'capgympfl.com', billDay: '15th' },
+  { name: 'Capital Gymnastics Round Rock',   abbr: 'CRR', color: '#ff1493', color2: '#c0c0c0', color3: '#ffffff', color4: '#3c3939', logo: 'CRR-logo - 500x500.png', email: 'info@capgymrnd.com', fee: '55', domain: 'capgymrnd.com', billDay: '15th' },
+  { name: 'Rowland Ballard - Atascocita',    abbr: 'RBA', color: '#1a3c66', color2: '#c52928', color3: '#739ab9', color4: '#ffffff', logo: 'rba_rbk--logo - 500x500.png', email: 'info@rbatascocita.com', fee: '50', domain: 'rbatascocita.com', billDay: '15th' },
+  { name: 'Rowland Ballard - Kingwood',      abbr: 'RBK', color: '#1a3c66', color2: '#c52928', color3: '#739ab9', color4: '#ffffff', logo: 'rba_rbk--logo - 500x500.png', email: 'info@rbkingwood.com', fee: '50', domain: 'rbkingwood.com', billDay: '15th' },
+  { name: 'Houston Gymnastics Academy',      abbr: 'HGA', color: '#c91724', color2: '#262626', color3: '#d0d0d8', color4: '#ffffff', logo: 'hga--logo - 500x500.png', email: 'info@houstongymnastics.com', fee: '55', domain: 'houstongymnastics.com', billDay: '15th' },
+  { name: 'Estrella Gymnastics',             abbr: 'EST', color: '#011837', color2: '#666666', color3: '#100f0f', color4: '#ffffff', logo: 'est--logo - 500x500.png', email: 'info@estrellagym.com', fee: '55', domain: 'estrellagym.com', billDay: '15th' },
+  { name: 'Oasis Gymnastics',                abbr: 'OAS', color: '#3eb29f', color2: '#3e266b', color3: '#e7e6f0', color4: '#ffffff', logo: 'oasis--logo - 500x500.png', email: 'info@oasisgym.com', fee: '55', domain: 'oasisgym.com', billDay: '15th' },
+  { name: 'Scottsdale Gymnastics',           abbr: 'SGT', color: '#c72b12', color2: '#e6e6e6', color3: '#000000', color4: '#ffffff', logo: 'sgt-logo - 500x500.png', email: 'info@scottsdalegymnastics.com', fee: '55', domain: 'scottsdalegymnastics.com', billDay: '15th' },
+  { name: 'Tigar Gymnastics',                abbr: 'TIG', color: '#f57f20', color2: '#0a3651', color3: '#7fc4e0', color4: '#ffffff', logo: 'tigar--logo - 500x500.png', email: 'info@tigargym.com', fee: '55', domain: 'tigargym.com', billDay: '15th' },
+  { name: 'Metro Gymnastics Center',         abbr: 'MGC', color: '#0097be', color2: '#0097be', color3: '#a7a7a7', color4: '#ffffff', logo: 'metro--logo - 500x500.png', email: 'info@metrogymnastics.com', fee: '35', domain: 'metrogymnastics.com', billDay: '20th' }
 ];
 
 let currentGym = null;
 let currentDoc = 'waiver';
 
-/* Override warning text color for gyms with light brand colors (SGT=Scottsdale, CRR=Capital Round Rock) */
-const WARNING_COLOR_OVERRIDES = { SGT: '#000', CRR: '#000' };
-const POLICY_INTRO_COLOR_OVERRIDES = { SGT: '#000', CRR: '#000' };
+/* Override warning/intro text color where the brand color2 is too light to read on white.
+   SGT/CRR → black; MGC (Metro) → a deepened teal so the brand accent stays but reads at ~5.9:1. */
+const WARNING_COLOR_OVERRIDES = { SGT: '#000', CRR: '#000', MGC: '#006d8a' };
+const POLICY_INTRO_COLOR_OVERRIDES = { SGT: '#000', CRR: '#000', MGC: '#006d8a' };
+/* Gyms whose warning box is a SOLID FILL (white text) instead of an outline. */
+const WARNING_FILL_OVERRIDES = { MGC: '#0b0d10' };
+/* Gyms whose policy-intro box is a SOLID FILL (white text) instead of a light tint. */
+const POLICY_INTRO_FILL_OVERRIDES = { MGC: '#0b0d10' };
+/* Per-gym heading color override (else falls back to the gym's primary). MGC = deepened teal so headings read crisp, not washed. */
+const H1_COLOR_OVERRIDES = { MGC: '#006d8a' };
 
 /* Logo files live in /logos/ — bare filename in Admin/KV still works */
 function resolveLogoUrl(logo) {
@@ -953,11 +962,32 @@ function selectGym(idx) {
   document.getElementById('gridTitle').style.display = 'none';
   document.getElementById('viewer').classList.add('active');
   document.getElementById('viewer').style.setProperty('--gym-color', gym.color);
+  document.getElementById('viewer').style.setProperty('--gym-h1-color', H1_COLOR_OVERRIDES[gym.abbr] || gym.color);
   document.getElementById('viewer').style.setProperty('--gym-color2', gym.color2 || gym.color);
   document.getElementById('viewer').style.setProperty('--gym-color3', gym.color3 || '#d8d8d8');
   document.getElementById('viewer').style.setProperty('--gym-color4', gym.color4 || '#ffffff');
-  document.getElementById('viewer').style.setProperty('--gym-warning-color', WARNING_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color);
-  document.getElementById('viewer').style.setProperty('--gym-intro-color', POLICY_INTRO_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color);
+  var _warnFill = WARNING_FILL_OVERRIDES[gym.abbr];
+  if (_warnFill) {
+    document.getElementById('viewer').style.setProperty('--gym-warning-bg', _warnFill);
+    document.getElementById('viewer').style.setProperty('--gym-warning-border', _warnFill);
+    document.getElementById('viewer').style.setProperty('--gym-warning-color', '#ffffff');
+  } else {
+    var _warnCol = WARNING_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color;
+    document.getElementById('viewer').style.setProperty('--gym-warning-bg', 'transparent');
+    document.getElementById('viewer').style.setProperty('--gym-warning-border', _warnCol);
+    document.getElementById('viewer').style.setProperty('--gym-warning-color', _warnCol);
+  }
+  var _introFill = POLICY_INTRO_FILL_OVERRIDES[gym.abbr];
+  if (_introFill) {
+    document.getElementById('viewer').style.setProperty('--gym-intro-bg', _introFill);
+    document.getElementById('viewer').style.setProperty('--gym-intro-border', _introFill);
+    document.getElementById('viewer').style.setProperty('--gym-intro-color', '#ffffff');
+  } else {
+    var _introCol = POLICY_INTRO_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color;
+    document.getElementById('viewer').style.removeProperty('--gym-intro-bg');
+    document.getElementById('viewer').style.setProperty('--gym-intro-border', _introCol);
+    document.getElementById('viewer').style.setProperty('--gym-intro-color', _introCol);
+  }
   document.getElementById('backBtn').style.display = 'flex';
   document.getElementById('backBtnLabel').textContent = 'All Gyms';
   document.getElementById('bulkDlBtn').classList.add('hidden');
@@ -1039,6 +1069,7 @@ function substituteVars(text, gym) {
              .replace(/\{\{gym\.color3\}\}/g, gym.color3 || '#d8d8d8')
              .replace(/\{\{gym\.color4\}\}/g, gym.color4 || '#ffffff')
              .replace(/\{\{gym\.abbr\}\}/g, gym.abbr || '')
+             .replace(/\{\{gym\.billDay\}\}/g, gym.billDay || '15th')
              .replace(/\{\{gym\.logo\}\}/g, resolveLogoUrl(gym.logo) || '');
 }
 
@@ -1208,7 +1239,7 @@ function getPolicyHTML(gym) {
 <li>Christmas Day</li>
 </ul>
 
-<p>Class payments are automatically charged to the credit card on file on the 15th of the prior month. For example, payment for the month of June will be processed on May 15th.</p>
+<p>Class payments are automatically charged to the credit card on file on the ${gym.billDay||'15th'} of the prior month. For example, payment for the month of June will be processed on May ${gym.billDay||'15th'}.</p>
 <ul>
 <li>Dates may vary based on holidays.</li>
 <li>A credit card on file is required for monthly payments.</li>
@@ -1688,7 +1719,7 @@ async function buildWaiverPDF(gym, logoDataURL) {
   var col = parseHexColor(gym.color);
   var warningHex = WARNING_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color;
   var warnCol = parseHexColor(warningHex);
-  var h1Hex = gym.abbr === 'OAS' ? '#3e266b' : gym.color;
+  var h1Hex = H1_COLOR_OVERRIDES[gym.abbr] || (gym.abbr === 'OAS' ? '#3e266b' : gym.color);
   var h1Col = parseHexColor(h1Hex);
 
   /* ── Waiver spacing — tuned to fit on 1 page ── */
@@ -1742,10 +1773,20 @@ async function buildWaiverPDF(gym, logoDataURL) {
   var warnLines = pdf.splitTextToSize(warnText, CW - 24);
   var warnLineH = FS_WARNING + 3;
   var warnBoxH = warnLines.length * warnLineH + 10;
-  pdf.setDrawColor(warnCol.r, warnCol.g, warnCol.b);
-  pdf.setLineWidth(1.5);
-  pdf.roundedRect(MG_L, y, CW, warnBoxH, 3, 3, 'S');
-  pdf.setTextColor(warnCol.r, warnCol.g, warnCol.b);
+  var warnFillHex = WARNING_FILL_OVERRIDES[gym.abbr];
+  if (warnFillHex) {
+    var wf = parseHexColor(warnFillHex);
+    pdf.setFillColor(wf.r, wf.g, wf.b);
+    pdf.setDrawColor(wf.r, wf.g, wf.b);
+    pdf.setLineWidth(1.5);
+    pdf.roundedRect(MG_L, y, CW, warnBoxH, 3, 3, 'FD');
+    pdf.setTextColor(255, 255, 255);
+  } else {
+    pdf.setDrawColor(warnCol.r, warnCol.g, warnCol.b);
+    pdf.setLineWidth(1.5);
+    pdf.roundedRect(MG_L, y, CW, warnBoxH, 3, 3, 'S');
+    pdf.setTextColor(warnCol.r, warnCol.g, warnCol.b);
+  }
   for (var wi = 0; wi < warnLines.length; wi++) {
     var wlw = pdf.getTextWidth(warnLines[wi]);
     pdf.text(warnLines[wi], MG_L + (CW - wlw)/2, y + 5 + FS_WARNING + wi * warnLineH);
@@ -1843,7 +1884,7 @@ async function buildPolicyPDF(gym, logoDataURL) {
   var { jsPDF } = window.jspdf;
   var pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
   var col = parseHexColor(gym.color);
-  var h1Hex = gym.abbr === 'OAS' ? '#3e266b' : gym.color;
+  var h1Hex = H1_COLOR_OVERRIDES[gym.abbr] || (gym.abbr === 'OAS' ? '#3e266b' : gym.color);
   var h1Col = parseHexColor(h1Hex);
   var policyIntroHex = POLICY_INTRO_COLOR_OVERRIDES[gym.abbr] || gym.color2 || gym.color;
   var piCol = parseHexColor(policyIntroHex);
@@ -1890,11 +1931,21 @@ async function buildPolicyPDF(gym, logoDataURL) {
   pdf.setFont('times', 'normal');
   var introLines = pdf.splitTextToSize(introText, CW - 24);
   var introBoxH = introLines.length * (FS_BODY + 4) + 14;
-  pdf.setFillColor(piBg.r, piBg.g, piBg.b);
-  pdf.setDrawColor(piCol.r, piCol.g, piCol.b);
-  pdf.setLineWidth(1.5);
-  pdf.roundedRect(MG_L, y, CW, introBoxH, 5, 5, 'FD');
-  pdf.setTextColor(piCol.r, piCol.g, piCol.b);
+  var introFillHex = POLICY_INTRO_FILL_OVERRIDES[gym.abbr];
+  if (introFillHex) {
+    var iff = parseHexColor(introFillHex);
+    pdf.setFillColor(iff.r, iff.g, iff.b);
+    pdf.setDrawColor(iff.r, iff.g, iff.b);
+    pdf.setLineWidth(1.5);
+    pdf.roundedRect(MG_L, y, CW, introBoxH, 5, 5, 'FD');
+    pdf.setTextColor(255, 255, 255);
+  } else {
+    pdf.setFillColor(piBg.r, piBg.g, piBg.b);
+    pdf.setDrawColor(piCol.r, piCol.g, piCol.b);
+    pdf.setLineWidth(1.5);
+    pdf.roundedRect(MG_L, y, CW, introBoxH, 5, 5, 'FD');
+    pdf.setTextColor(piCol.r, piCol.g, piCol.b);
+  }
   for (var ii = 0; ii < introLines.length; ii++) {
     var ilw = pdf.getTextWidth(introLines[ii]);
     pdf.text(introLines[ii], MG_L + (CW - ilw)/2, y + 8 + (FS_BODY + 1) + ii * (FS_BODY + 4));
@@ -2030,7 +2081,7 @@ function getPolicyContent(gym) {
       { html: 'Thanksgiving' }, { html: 'Day After Thanksgiving (Black Friday)' },
       { html: 'Christmas Eve' }, { html: 'Christmas Day' }
     ]},
-    { type: 'p', html: 'Class payments are automatically charged to the credit card on file on the 15th of the prior month. For example, payment for the month of June will be processed on May 15th.' },
+    { type: 'p', html: 'Class payments are automatically charged to the credit card on file on the ' + (gym.billDay||'15th') + ' of the prior month. For example, payment for the month of June will be processed on May ' + (gym.billDay||'15th') + '.' },
     { type: 'ul', items: [
       { html: 'Dates may vary based on holidays.' },
       { html: 'A credit card on file is required for monthly payments.' }
