@@ -618,6 +618,7 @@ body {
       <button class="tab" id="tabGyms" onclick="switchTab('gyms')">Gyms</button>
       <button class="tab active" id="tabWaiver" onclick="switchTab('waiver')">Release & Waiver</button>
       <button class="tab" id="tabPolicy" onclick="switchTab('policy')">Policies & Procedures</button>
+      <button class="tab" id="tabIclass" onclick="switchTab('iclass')">iClass Export</button>
     </div>
 
     <!-- Gym Editor -->
@@ -628,6 +629,9 @@ body {
 
     <!-- Policy Editor -->
     <div id="policyEditor" style="display:none;"></div>
+
+    <!-- iClass Export -->
+    <div id="iclassEditor" style="display:none;"></div>
   </div>
 </div>
 
@@ -745,9 +749,12 @@ function switchTab(tab) {
   document.getElementById('tabGyms').classList.toggle('active', tab === 'gyms');
   document.getElementById('tabWaiver').classList.toggle('active', tab === 'waiver');
   document.getElementById('tabPolicy').classList.toggle('active', tab === 'policy');
+  document.getElementById('tabIclass').classList.toggle('active', tab === 'iclass');
   document.getElementById('gymsEditor').style.display = tab === 'gyms' ? '' : 'none';
   document.getElementById('waiverEditor').style.display = tab === 'waiver' ? '' : 'none';
   document.getElementById('policyEditor').style.display = tab === 'policy' ? '' : 'none';
+  document.getElementById('iclassEditor').style.display = tab === 'iclass' ? '' : 'none';
+  if (tab === 'iclass') renderIclassExport();
 }
 
 /* ── Render Full Editor ── */
@@ -1182,6 +1189,94 @@ function renderSectionsPreview(sections, gym) {
     }
   }
   return html;
+}
+
+/* ── iClass Export ──
+   Generates the flat, inline-styled HTML that iClassPro uses for the
+   portal policy/waiver. Built fresh from current content, so it carries
+   per-gym data (name, fee, billing day) and none of the legacy
+   "miscount" typo / broken-link cruft. */
+var ICL = { h1: 'color: #1a1a1a; font-size: 18px;', h2: 'color: #1a1a1a; font-size: 15px;', body: 'color: #1a1a1a; font-size: 14px;' };
+
+function iclassLine(n) { var s = ''; for (var i = 0; i < n; i++) s += '_'; return s; }
+
+function iclassSections(sections, gym) {
+  var out = [];
+  for (var i = 0; i < sections.length; i++) {
+    var s = sections[i];
+    if (s.type === 'h1') out.push('<h1 style="' + ICL.h1 + '">' + substituteVars(s.text, gym) + '</h1>');
+    else if (s.type === 'h2') out.push('<h2 style="' + ICL.h2 + '">' + substituteVars(s.text, gym) + '</h2>');
+    else if (s.type === 'p' || s.type === 'indent') out.push('<p style="' + ICL.body + '">' + substituteVars(s.html || '', gym) + '</p>');
+    else if (s.type === 'ul' || s.type === 'ol') {
+      var li = '';
+      for (var j = 0; j < (s.items || []).length; j++) {
+        li += '<li>' + substituteVars(s.items[j].html, gym);
+        if (s.items[j].sub) { li += '<ul>'; for (var k = 0; k < s.items[j].sub.length; k++) li += '<li>' + substituteVars(s.items[j].sub[k], gym) + '</li>'; li += '</ul>'; }
+        li += '</li>';
+      }
+      out.push('<' + s.type + ' style="' + ICL.body + '">' + li + '</' + s.type + '>');
+    }
+    else if (s.type === 'sig') {
+      var rows = '';
+      for (var ri = 0; ri < s.lines.length; ri++) {
+        rows += '<p>' + s.lines[ri].map(function(f) { return f.label + ': ' + iclassLine(24); }).join(' &nbsp;&nbsp;&nbsp; ') + '</p>';
+      }
+      out.push('<div class="sig-line" style="' + ICL.body + '">' + rows + '</div>');
+    }
+  }
+  return out;
+}
+
+function buildIClassHTML(doc, gym) {
+  var out = [];
+  if (doc === 'waiver') {
+    var w = content.waiver;
+    out.push('<h1 style="' + ICL.h1 + '">' + w.title.map(function(t) { return substituteVars(t, gym); }).join(' ') + '</h1>');
+    out.push('<p style="' + ICL.body + '"><strong>' + substituteVars(w.warning, gym) + '</strong></p>');
+    out = out.concat(iclassSections(w.sections, gym));
+  } else {
+    var p = content.policy;
+    out.push('<h1 style="' + ICL.h1 + '">' + substituteVars(p.title, gym) + '</h1>');
+    out.push('<p style="' + ICL.body + '">' + substituteVars(p.intro, gym) + '</p>');
+    out = out.concat(iclassSections(p.sections, gym));
+  }
+  return out.join('\n');
+}
+
+function renderIclassExport() {
+  var c = document.getElementById('iclassEditor');
+  c.innerHTML =
+    '<div class="help-tip">' +
+      '<h3>iClass Export</h3>' +
+      '<p>Pick a gym and document, then <strong>Copy HTML</strong> and paste it into iClass (Settings &rarr; the policy/waiver field). Generated fresh from your current content &mdash; gym name, fee, and billing date are filled in automatically, and the legacy &ldquo;miscount&rdquo; typo and broken USAG/SafeSport links are gone.</p>' +
+    '</div>' +
+    '<div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px;">' +
+      '<select id="iclassGym" onchange="updateIclassOutput()" style="padding:8px 12px; border:2px solid #d1d5db; border-radius:8px; font-size:14px; font-weight:600;"></select>' +
+      '<select id="iclassDoc" onchange="updateIclassOutput()" style="padding:8px 12px; border:2px solid #d1d5db; border-radius:8px; font-size:14px; font-weight:600;">' +
+        '<option value="waiver">Release &amp; Waiver</option>' +
+        '<option value="policy">Policies &amp; Procedures</option>' +
+      '</select>' +
+      '<button class="btn btn-save" onclick="copyIclass()">Copy HTML</button>' +
+    '</div>' +
+    '<textarea id="iclassOutput" readonly onclick="this.select()" style="width:100%; min-height:440px; font-family:Consolas,monospace; font-size:12px; line-height:1.5; padding:14px; border:2px solid #c4cad4; border-radius:10px; background:#fff; white-space:pre-wrap; word-break:break-word;"></textarea>';
+  var sel = document.getElementById('iclassGym');
+  sel.innerHTML = gyms.map(function(g, i) { return '<option value="' + i + '">' + g.name + '</option>'; }).join('');
+  updateIclassOutput();
+}
+
+function updateIclassOutput() {
+  var gym = gyms[document.getElementById('iclassGym').value];
+  var doc = document.getElementById('iclassDoc').value;
+  document.getElementById('iclassOutput').value = buildIClassHTML(doc, gym);
+}
+
+function copyIclass() {
+  var ta = document.getElementById('iclassOutput');
+  ta.select();
+  navigator.clipboard.writeText(ta.value).then(
+    function() { showToast('iClass HTML copied — paste it into iClass'); },
+    function() { try { document.execCommand('copy'); showToast('Copied'); } catch (e) { showToast('Select the box and press Ctrl+C'); } }
+  );
 }
 
 /* ── Helpers ── */
